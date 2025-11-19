@@ -37,8 +37,20 @@ static void seterror(const char *fmt, ...)
 
 static const struct optent *entfind(argparse_t *ap, const char *optname)
 {
+        size_t n;
+        const struct option *opt;
+
+        n = strlen(optname);
+
         for (size_t i = 0; i < ap->nent; i++) {
-                if (strcmp(ap->ents[i].opt->long_name, optname) == 0)
+                opt = ap->ents[i].opt;
+                if (n == 1) {
+                        if (optname[0] == opt->short_name)
+                                return &ap->ents[i];
+                        continue;
+                }
+
+                if (strcmp(opt->long_name, optname) == 0)
                         return &ap->ents[i];
         }
 
