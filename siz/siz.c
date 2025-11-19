@@ -1,6 +1,7 @@
 /*
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2025 viakko
+ *
  * siz - A command-line tool for calculation file sizes and string lengths
  *
  * Supports file size calculation (with human-readable output)

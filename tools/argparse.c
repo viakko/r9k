@@ -1,7 +1,11 @@
 /*
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2025 viakko
- * argparse - Command line argument parsing library
+ *
+ * argparse - Lightweight command-line argument parsing library
+ *
+ * Provides getopt_long-style argument parsing with support for both
+ * short and long options, required/optional arguments, and multi-value options.
  */
 #include <argparse.h>
 #include <stdio.h>
