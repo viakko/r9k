@@ -11,6 +11,16 @@ static struct option options[] = {
         { 0 },
 };
 
+static size_t utf8len(const char *str)
+{
+        size_t len = 0;
+
+        while (*str)
+                len += (*str++ & 0xc0) != 0x80;
+
+        return len;
+}
+
 int main(int argc, char **argv)
 {
 
@@ -24,6 +34,11 @@ int main(int argc, char **argv)
 
         if (argparse_has(ap, "version")) {
                 printf("siz version: %s\n", NSZ_VERSION);
+                exit(0);
+        }
+
+        if (argparse_has(ap, "utf8")) {
+                printf("%ld\n", utf8len(argparse_arg(ap)));
                 exit(0);
         }
 
