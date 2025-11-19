@@ -164,6 +164,11 @@ argparse_t *argparse_parse(const struct option *opts, int argc, char **argv)
         argparse_t *ap;
         const struct option *op;
 
+        if (!opts || argc < 1 || !argv) {
+                seterror("invalid arguments");
+                return NULL;
+        }
+
         ap = calloc(1, sizeof(*ap));
         ap->opts = opts;
         ap->nopt = optcount(opts);
