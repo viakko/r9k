@@ -251,7 +251,18 @@ int argparse_has(argparse_t *ap, const char *name)
         return entfind(ap, name) ? 1 : 0;
 }
 
-const char **argparse_vals(argparse_t *ap, const char *name, size_t *nval)
+const char *argparse_val(argparse_t *ap, const char *name)
+{
+        const char **vals;
+
+        vals = argparse_multi_val(ap, name, NULL);
+        if (!vals)
+                return NULL;
+
+        return vals[0];
+}
+
+const char **argparse_multi_val(argparse_t *ap, const char *name, size_t *nval)
 {
         const struct optent *ent;
 
@@ -263,17 +274,6 @@ const char **argparse_vals(argparse_t *ap, const char *name, size_t *nval)
                 *nval = ent->nval;
 
         return (const char **) ent->vals;
-}
-
-const char *argparse_val(argparse_t *ap, const char *name)
-{
-        const char **vals;
-
-        vals = argparse_vals(ap, name, NULL);
-        if (!vals)
-                return NULL;
-
-        return vals[0];
 }
 
 const char *argparse_arg(argparse_t *ap)
