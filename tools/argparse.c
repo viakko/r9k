@@ -151,13 +151,14 @@ static int addval(argparse_t *ap, size_t optid, const char *val)
                         return -1;
                 }
 
+                ent->vals = tmp_vals;
+
                 valdup = strdup(val);
                 if (!valdup) {
                         seterror(strerror(errno));
                         return -1;
                 }
 
-                ent->vals = tmp_vals;
                 ent->vals[ent->nval++] = valdup;
         }
 

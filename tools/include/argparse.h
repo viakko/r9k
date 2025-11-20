@@ -20,7 +20,7 @@
 
 struct option
 {
-        const char short_name;
+        int short_name;
         const char *long_name;
         unsigned int has_arg;
         unsigned int multi;
