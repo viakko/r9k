@@ -4,7 +4,7 @@
  *
  * argparse - Lightweight command-line argument parsing library
  *
- * Provides getopt_long-style argument parsing with support for both
+ * Provides argument parsing with support for both
  * short and long options, required/optional arguments, and multi-value options.
  */
 #ifndef ARGPARSE_H_
@@ -12,13 +12,14 @@
 
 #include <stdlib.h>
 
+#define no_arguments      (0)
 #define required_argument (1 << 1)
 #define opt_multi         (1 << 2)
 #define allow_group       (1 << 3)
 
 struct option
 {
-        int short_name;
+        const char short_name;
         const char *long_name;
         unsigned int flags;
         const char *description;

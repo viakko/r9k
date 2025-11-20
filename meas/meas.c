@@ -9,16 +9,15 @@
  */
 #include <stdio.h>
 #include <string.h>
-#include <errno.h>
 #include <argparse.h>
 
-#define SIZ_VERSION "1.0.0"
+#define MEAS_VERSION "1.0.0"
 
 static struct option options[] = {
-        { 'v', "version", 0, "版本号" },
-        { 'u', "utf8", 0, "按字符计算" },
-        { '?', "raw", 0, "以字节数显示" },
-        { 'f', "file", 0, "计算文件大小" },
+        { 'l', "largest", required_argument | allow_group, "large file" },
+        { 's', "smallest", required_argument | allow_group, "small file" },
+        { 'd', "disk", required_argument | allow_group, "disk size" },
+        { 'c', "count", required_argument | allow_group, "count directory file size" },
         { 0 },
 };
 
@@ -71,53 +70,25 @@ static double human_size(size_t size, const char **unit)
 
 int main(int argc, char **argv)
 {
-        const char *arg;
         argparse_t *ap;
         ap = argparse_parse(options, argc, argv);
 
         if (!ap) {
-                fprintf(stderr, "siz error: %s\n", argparse_error());
-                exit(1);
+                fprintf(stderr, "error: %s\n", argparse_error());
+                exit(EXIT_FAILURE);
         }
 
-        if (argparse_has(ap, "version")) {
-                printf("siz version: %s\n", SIZ_VERSION);
-                exit(0);
-        }
+        if (argparse_has(ap, "l"))
+                printf("l: %s\n", argparse_val(ap, "l"));
 
-        arg = argparse_arg(ap);
-        if (!arg) {
-                fprintf(stderr, "siz error: invalid argument\n");
-                exit(1);
-        }
+        if (argparse_has(ap, "s"))
+                printf("s: %s\n", argparse_val(ap, "s"));
 
-        if (argparse_has(ap, "file")) {
-                double hsize;
-                const char *unit;
-                ssize_t size = filesize(arg);
+        if (argparse_has(ap, "d"))
+                printf("d: %s\n", argparse_val(ap, "d"));
 
-                if (size == -1) {
-                        fprintf(stderr, "siz error: %s\n", strerror(errno));
-                        exit(1);
-                }
-
-                if (argparse_has(ap, "raw")) {
-                        printf("%ld\n", size);
-                        exit(0);
-                }
-
-                hsize = human_size(size, &unit);
-                printf("%.2f%s\n", hsize, unit);
-
-                exit(0);
-        }
-
-        if (argparse_has(ap, "utf8")) {
-                printf("%ld\n", utf8len(arg));
-                exit(0);
-        }
-
-        printf("%ld\n", strlen(arg));
+        if (argparse_has(ap, "c"))
+                printf("c: %s\n", argparse_val(ap, "c"));
 
         argparse_free(ap);
 

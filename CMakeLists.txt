@@ -4,4 +4,4 @@ project(fx C)
 set(CMAKE_C_STANDARD 17)
 
 add_subdirectory(tools)
-add_subdirectory(siz)
+add_subdirectory(meas)
