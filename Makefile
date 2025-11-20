@@ -7,28 +7,28 @@ BUILDDIR := build
 OBJDIR := $(BUILDDIR)/objs
 
 TOOLS_DIR := tools
-SIZ_DIR := siz
+MEAS_DIR := meas
 
 TOOLS_SRCS := $(wildcard $(TOOLS_DIR)/*.c)
-SIZ_SRCS := $(wildcard $(SIZ_DIR)/*.c)
+MEAS_SRCS := $(wildcard $(MEAS_DIR)/*.c)
 
 TOOLS_OBJS := $(TOOLS_SRCS:$(TOOLS_DIR)/%.c=$(OBJDIR)/tools/%.o)
-SIZ_OBJS := $(SIZ_SRCS:$(SIZ_DIR)/%.c=$(OBJDIR)/siz/%.o)
+MEAS_OBJS := $(MEAS_SRCS:$(MEAS_DIR)/%.c=$(OBJDIR)/meas/%.o)
 
-SIZ_BIN := $(BUILDDIR)/siz
+MEAS_BIN := $(BUILDDIR)/meas
 
-TARGETS := $(SIZ_BIN)
+TARGETS := $(MEAS_BIN)
 
 all:$(TARGETS)
 
-$(SIZ_BIN): $(SIZ_OBJS) $(TOOLS_OBJS)
+$(MEAS_BIN): $(MEAS_OBJS) $(TOOLS_OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) $^ -o $@
 
 $(OBJDIR)/tools/%.o: $(TOOLS_DIR)/%.c
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
 
-$(OBJDIR)/siz/%.o: $(SIZ_DIR)/%.c
+$(OBJDIR)/meas/%.o: $(MEAS_DIR)/%.c
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
 
