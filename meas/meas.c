@@ -2,10 +2,18 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2025 viakko
  *
- * siz - A command-line tool for calculation file sizes and string lengths
+ * argparse - Lightweight command-line argument parsing library
  *
- * Supports file size calculation (with human-readable output)
- * and string length counting (both byte length and UTF-8 character count)
+ * Provides multi-sytle command parsing with support for both
+ * short and long options. Short option support string type,
+ * and single-character options can be grouped.
+ *
+ * The rules:
+ *  - If a long option include 'abc', it gets proirity in processing.
+ *  - If 'abc' not found in long option, it will be split into single-character
+ *    options for short option matching.
+ *  - Supports argument specified with either spaces or equal signs.
+ *  - When arguments are specified using spaces, multiple values are supported.
  */
 #include <stdio.h>
 #include <stdlib.h>
