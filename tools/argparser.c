@@ -39,7 +39,7 @@ struct argparser
         uint32_t nopt;
 
         /* position value */
-        const char **vals;
+        const char *vals[MAX_VAL];
         uint32_t nval;
 
         /* error */
@@ -243,7 +243,7 @@ static int handle_short(struct argparser *ap, int *i, char *tok, int argc, char 
                         return -EINVAL;
                 }
 
-                if (has_val) {
+                if (has_val && opt->max > 0) {
                         error(ap, "option does not accept a value: -%c", tok[k]);
                         return -EINVAL;
                 }
