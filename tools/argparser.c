@@ -58,7 +58,7 @@ static int add_option(struct argparser *ap, struct option *opt)
 {
         if (ap->nopt >= MAX_UNIT) {
                 error(ap, "option out of %d", MAX_UNIT);
-                return -ENOSPC;
+                return -EOVERFLOW;
         }
 
         ap->opts[ap->nopt++] = opt;
@@ -70,7 +70,7 @@ static int store_position_val(struct argparser *ap, const char *val)
 {
         if (ap->nval >= MAX_VAL) {
                 error(ap, "position value out of %d", MAX_VAL);
-                return -ENOSPC;
+                return -EOVERFLOW;
         }
 
         ap->vals[ap->nval++] = val;
@@ -82,7 +82,7 @@ static int store_option_val(struct argparser *ap, struct option *opt, int is_lon
 {
         if (opt->count > opt->max) {
                 error(ap, "%s%s option value out of %d", OPT_PREFIX(is_long), tok, opt->max);
-                return -ENOSPC;
+                return -EOVERFLOW;
         }
 
         if (!opt->vals) {
