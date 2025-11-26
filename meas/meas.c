@@ -18,29 +18,44 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <argparser.h>
+#include <string.h>
 
 #define MEAS_VERSION "1.0.0"
 
 int main(int argc, char **argv)
 {
+        struct argparser *ap;
         struct option *help;
-        struct option *std;
-        struct option *O;
+        struct option *str;
+        struct option *unicode;
 
-        struct argparser *ap = argparser_create();
-
-        argparser_add0(ap, &help, "h", "help", "Print this program help", OP_NULL);
-        argparser_add1(ap, &std, "std", "standard", "Uses the standard", OP_NULL);
-        argparser_add1(ap, &O, "O", "optimize", "Optimize level", OP_CONCAT);
-
-        if (argparser_run(ap, argc, argv) != 0) {
-                fprintf(stderr, "%s\n", argparser_error(ap));
+        ap = argparser_create();
+        if (!ap) {
+                fprintf(stderr, "Failed to create argparser\n");
                 exit(1);
         }
 
-        if (O)
-                printf("Optimize: %s\n", O->sval);
+        argparser_add0(ap, &help, "h", "help", "show this help message and exit", OP_NULL);
+        argparser_add1(ap, &str, "S", "str", "input string value", OP_NULL | OP_REQVAL | OP_CONCAT);
+        argparser_add0(ap, &unicode, "u", "unicode", "input string value", OP_NULL);
 
+        if (argparser_run(ap, argc, argv) != 0) {
+                fprintf(stderr, "%s\n", argparser_error(ap));
+                argparser_free(ap);
+                exit(1);
+        }
+
+        if (help) {
+                printf("Usage [-h] [-u] [-S]\n");
+                goto end;
+        }
+
+        if (str) {
+                printf("%lu\n", strlen(str->sval));
+                goto end;
+        }
+
+end:
         argparser_free(ap);
 
         return 0;

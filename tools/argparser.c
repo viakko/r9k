@@ -163,12 +163,17 @@ static int take_val(struct argparser *ap, struct option *opt, int is_long, char 
         if (opt->_refs)
                 *opt->_refs = opt;
 
+        if (opt->max <= 0 && val) {
+                error(ap, "option %s%s does not accept a value: '%s'", OPT_PREFIX(is_long), tok, val);
+                return -EINVAL;
+        }
+
         if (opt->max > 0) {
                 if (!val) {
                         val = argv[*i + 1];
 
                         if (opt->flags & OP_REQVAL && !val) {
-                                error(ap, "Option %s%s missing required argument", OPT_PREFIX(is_long), tok);
+                                error(ap, "option %s%s missing required argument", OPT_PREFIX(is_long), tok);
                                 return -EINVAL;
                         }
 
@@ -222,24 +227,24 @@ static int handle_short(struct argparser *ap, int *i, char *tok, int argc, char 
                 return take_val(ap, opt, SHORT, tok, defval, i, argv);
 
         if (defval) {
-                error(ap, "Unknown option: -%s", tok);
+                error(ap, "unknown option: -%s", tok);
                 return -EINVAL;
         }
 
         for (int k = 0; tok[k]; k++) {
                 opt = lookup_short_char(ap, tok[k]);
                 if (!opt) {
-                        error(ap, "Unknown option: -%c", tok[k]);
+                        error(ap, "unknown option: -%c", tok[k]);
                         return -EINVAL;
                 }
 
                 if (opt->flags & OP_CONCAT) {
-                        error(ap, "Invalid option -%c cannot be in a group", tok[k]);
+                        error(ap, "invalid option -%c cannot be in a group", tok[k]);
                         return -EINVAL;
                 }
 
                 if (has_val) {
-                        error(ap, "Option does not accept a value: -%c", tok[k]);
+                        error(ap, "option does not accept a value: -%c", tok[k]);
                         return -EINVAL;
                 }
 
@@ -271,7 +276,7 @@ static int handle_long(struct argparser *ap, int *i, char *tok, int argc, char *
 
         opt = lookup_long(ap, tok);
         if (!opt) {
-                error(ap, "Unknown option: --%s", tok);
+                error(ap, "unknown option: --%s", tok);
                 return -EINVAL;
         }
 
