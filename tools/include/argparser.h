@@ -26,6 +26,7 @@
 #define OP_NULL   (0)
 #define OP_REQVAL (1 << 0) /* required value */
 #define OP_CONCAT (1 << 1) /* -O1 -O2 */
+#define OP_NOGRP  (1 << 2) /* not allow group */
 
 struct option
 {

@@ -246,6 +246,11 @@ static int handle_short(struct argparser *ap, int *i, char *tok, int argc, char 
                         return -EINVAL;
                 }
 
+                if (opt->flags & OP_NOGRP) {
+                        error(ap, "option -%c cannot be used as a group", tok[k]);
+                        return -EINVAL;
+                }
+
                 if (has_val && opt->max > 0) {
                         error(ap, "option does not accept a value: -%c", tok[k]);
                         return -EINVAL;
