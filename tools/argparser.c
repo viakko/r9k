@@ -173,7 +173,7 @@ static int take_val(struct argparser *ap, struct option *opt, int is_long, char 
                         val = argv[*i + 1];
 
                         if (opt->flags & OP_REQVAL && !val) {
-                                error(ap, "option %s%s required argument", OPT_PREFIX(is_long), tok);
+                                error(ap, "option %s%s missing required argument", OPT_PREFIX(is_long), tok);
                                 return -EINVAL;
                         }
 
@@ -426,7 +426,11 @@ int argparser_run(struct argparser *ap, int argc, char *argv[])
 
                 if (tok[1] == '-') {
                         tok += 2;
-                        handle_long(ap, &i, tok, argv);
+
+                        r = handle_long(ap, &i, tok, argv);
+                        if (r != 0)
+                                return r;
+
                         continue;
                 }
 
