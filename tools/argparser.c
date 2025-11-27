@@ -121,8 +121,10 @@ static struct option *lookup_short_char(struct argparser *ap, const char shortop
 
         for (int i = 0; i < ap->nopt; i++) {
                 opt = ap->opts[i];
-                if (opt->shortopt && shortopt == opt->shortopt[0])
-                        return opt;
+                if (opt->shortopt) {
+                        if (strlen(opt->shortopt) == 1 && shortopt == opt->shortopt[0])
+                                return opt;
+                }
         }
 
         return NULL;
