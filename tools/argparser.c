@@ -447,3 +447,16 @@ const char *argparser_error(struct argparser *ap)
 {
         return ap->error;
 }
+
+uint32_t argparser_count(struct argparser *ap)
+{
+        return ap->nval;
+}
+
+const char *argparser_val(struct argparser *ap, uint32_t index)
+{
+        if (index >= MAX_VAL)
+                return NULL;
+
+        return ap->vals[index];
+}
