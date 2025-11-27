@@ -50,7 +50,8 @@ struct argparser;
 struct argparser *argparser_create(void);
 void argparser_free(struct argparser *ap);
 
-/* Add options to argparser, if no short name set '?' to the shortopt.
+/* Add options to argparser.
+ * Set NULL for unused short or long name, but at least one must be provided.
  * Default no argument option can merge to one option for short name.
  * Short option group only last one option can accept parameter. */
 int argparser_add0(struct argparser *ap,
