@@ -30,9 +30,16 @@ static void show_version()
         exit(0);
 }
 
-static void show_help()
+static void show_help(void)
 {
-        printf("Usage [-h] [-u] [-S]\n");
+        printf(
+            "Usage: meas [OPTIONS]\n"
+            "Options:\n"
+            "  -h, --help            show this help message and exit\n"
+            "  -version, --version   show current version\n"
+            "  -s, --str <value>     input string value (required)\n"
+            "  -u, --unicode         use unicode parse string length\n"
+        );
         exit(0);
 }
 
