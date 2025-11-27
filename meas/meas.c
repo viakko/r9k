@@ -43,9 +43,9 @@ static void show_help(void)
         exit(0);
 }
 
-static void show_strlen(struct option *unicode, const char *str)
+static void show_strlen(int is_unicode, const char *str)
 {
-        printf("%zu\n", unicode ? strlen_utf8(str) : strlen(str));
+        printf("%zu\n", is_unicode ? strlen_utf8(str) : strlen(str));
 }
 
 int main(int argc, char **argv)
@@ -75,7 +75,11 @@ int main(int argc, char **argv)
 
         if (help) show_help();
         if (version) show_version();
-        if (str) show_strlen(unicode, str->sval);
+        if (str) show_strlen(unicode != NULL, str->sval);
+
+        /* Default execute get unicode string length */
+        if (argparser_count(ap) > 0)
+                show_strlen(1, argparser_val(ap, 0));
 
         argparser_free(ap);
 
