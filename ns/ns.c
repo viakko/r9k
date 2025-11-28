@@ -113,8 +113,9 @@ int main(int argc, char **argv)
         struct option *opt_flush_dns;
         struct option *opt_iface;
         struct option *opt_verbose;
+        struct option *opt_help;
 
-        ap = argparser_create();
+        ap = argparser_create("ns");
         if (!ap)
                 return -1;
 
@@ -123,6 +124,7 @@ int main(int argc, char **argv)
         argparser_add0(ap, &opt_resolv, "resolv", NULL, "show resolv.conf and exit", OP_NULL);
         argparser_add0(ap, &opt_flush_dns, NULL, "flushdns", "flush system DNS cache and exit", OP_NULL);
         argparser_add0(ap, &opt_iface, "i", "interface", "list interface address", OP_NULL);
+        argparser_add0(ap, &opt_help, "h", "help", "show this help message and exit", OP_NULL);
 
         if (argparser_run(ap, argc, argv) != 0) {
                 fprintf(stderr, "%s\n", argparser_error(ap));
@@ -138,6 +140,12 @@ int main(int argc, char **argv)
 
         if (opt_flush_dns)
                 run_flush();
+
+        if (opt_help) {
+                printf("%s", argparser_help(ap));
+                argparser_free(ap);
+                exit(0);
+        }
 
         if (opt_iface)
                 run_iface(opt_verbose != NULL);

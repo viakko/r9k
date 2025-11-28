@@ -34,6 +34,8 @@
 
 struct argparser
 {
+        const char *name;
+
         /* options */
         struct option *opts[MAX_UNIT];
         uint32_t nopt;
@@ -42,8 +44,9 @@ struct argparser
         const char *vals[MAX_VAL];
         uint32_t nval;
 
-        /* error */
+        /* buff */
         char error[4096];
+        char help[4096];
 };
 
 static void error(struct argparser *ap, const char *fmt, ...)
@@ -330,13 +333,15 @@ static int handle_long(struct argparser *ap, int *i, char *tok, char *argv[])
         return r < 0 ? r : 0;
 }
 
-struct argparser *argparser_create(void)
+struct argparser *argparser_create(const char *name)
 {
         struct argparser *ap;
 
         ap = calloc(1, sizeof(*ap));
         if (!ap)
                 return NULL;
+
+        ap->name = name;
 
         return ap;
 }
@@ -461,4 +466,40 @@ const char *argparser_val(struct argparser *ap, uint32_t index)
                 return NULL;
 
         return ap->vals[index];
+}
+
+const char *argparser_help(struct argparser *ap)
+{
+        size_t n = 0;
+        struct option *opt;
+
+        if (ap->name)
+                n += snprintf(ap->help, sizeof(ap->help), "Usage: %s [options]\n", ap->name);
+
+        n += snprintf(ap->help + n, sizeof(ap->help) - n, "Options:\n");
+
+        for (int i = 0; i < ap->nopt; i++) {
+                opt = ap->opts[i];
+
+                if (opt->shortopt) {
+                        n += snprintf(ap->help + n, sizeof(ap->help) - n, "  -%s", opt->shortopt);
+                } else {
+                        n += snprintf(ap->help + n, sizeof(ap->help) - n, "  ");
+                }
+
+                if (opt->longopt) {
+                        if (opt->shortopt) {
+                                n += snprintf(ap->help + n, sizeof(ap->help) - n, ", --%s", opt->longopt);
+                        } else {
+                                n += snprintf(ap->help + n, sizeof(ap->help) - n, "--%s", opt->longopt);
+                        }
+                }
+
+                if (opt->tips)
+                        n += snprintf(ap->help + n, sizeof(ap->help) - n, "\n    %s\n", opt->tips);
+
+                n += snprintf(ap->help + n, sizeof(ap->help) - n, "\n");
+        }
+
+        return ap->help;
 }

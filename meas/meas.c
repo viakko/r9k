@@ -24,16 +24,9 @@ static size_t strlen_utf8(const char *str)
         return len;
 }
 
-static void run_help(void)
+static void run_help(struct argparser *ap)
 {
-        printf(
-            "Usage: meas [OPTIONS]\n"
-            "Options:\n"
-            "  -h, --help            show this help message and exit\n"
-            "  -version, --version   show current version\n"
-            "  -s, --str <value>     input string value (required)\n"
-            "  -u, --unicode         use unicode parse string length\n"
-        );
+        printf("%s", argparser_help(ap));
         exit(0);
 }
 
@@ -57,14 +50,14 @@ int main(int argc, char **argv)
         struct option *opt_str;
         struct option *opt_uni;
 
-        ap = argparser_create();
+        ap = argparser_create("meas");
         if (!ap) {
                 fprintf(stderr, "Failed to create argparser\n");
                 exit(1);
         }
 
         argparser_add0(ap, &opt_help, "h", "help", "show this help message and exit", OP_NULL);
-        argparser_add0(ap, &opt_version, "version", "version", "show current version", OP_NULL);
+        argparser_add0(ap, &opt_version, "version", NULL, "show current version", OP_NULL);
         argparser_add1(ap, &opt_str, "s", "str", "input string value", OP_NULL | OP_REQVAL);
         argparser_add0(ap, &opt_uni, "u", "unicode", "use unicode parse string length", OP_NULL);
 
@@ -75,7 +68,7 @@ int main(int argc, char **argv)
         }
 
         if (opt_help)
-                run_help();
+                run_help(ap);
 
         if (opt_version)
                 run_version();

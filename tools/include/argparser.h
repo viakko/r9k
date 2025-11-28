@@ -47,7 +47,7 @@ struct option
 struct argparser;
 
 /* If a result doesn't equal to 0 that mean error. */
-struct argparser *argparser_create(void);
+struct argparser *argparser_create(const char *name);
 void argparser_free(struct argparser *ap);
 
 /* Add options to argparser.
@@ -83,5 +83,8 @@ const char *argparser_error(struct argparser *ap);
 /* Get position values */
 uint32_t argparser_count(struct argparser *ap);
 const char *argparser_val(struct argparser *ap, uint32_t index);
+
+/* Get help messsage */
+const char *argparser_help(struct argparser *ap);
 
 #endif /* ARGPARSER_H_ */
