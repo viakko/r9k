@@ -8,4 +8,9 @@ do {                                            \
         exit(EXIT_FAILURE);                     \
 } while (0)
 
+#define streq(a, b) (strcmp(a, b) == 0)
+#define strne(a, b) (!streq(a, b))
+
+#define IS_NULL(o) ((o) == NULL)
+
 #endif /* TYPEDEFS_H_ */
