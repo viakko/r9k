@@ -51,7 +51,7 @@ int main(int argc, char **argv)
 
         argparser_add0(ap, &help, "h", "help", "show this help message and exit", opt_none);
         argparser_add0(ap, &version, "version", NULL, "show current version", opt_none);
-        argparser_add0(ap, &str, "s", "str", "as string type", opt_none);
+        argparser_add1(ap, &str, "s", "str", "as string type", opt_reqval);
         argparser_add0(ap, &unicode, "u", "unicode", "use unicode parse string length", opt_none);
 
         if (argparser_run(ap, argc, argv) != 0) {
@@ -66,10 +66,16 @@ int main(int argc, char **argv)
         }
 
         if (version) {
-                printf("Meas %s\n", MEAS_VERSION);
+                printf("meas %s\n", MEAS_VERSION);
                 goto cleanup;
         }
 
+        if (str) {
+                printf("%zu\n", length(str->sval, !IS_NULL(unicode)));
+                goto cleanup;
+        }
+
+        /* default */
         if (argparser_count(ap) > 0)
                 printf("%zu\n", length(argparser_val(ap, 0), !IS_NULL(unicode)));
 
