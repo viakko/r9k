@@ -29,7 +29,7 @@
 #define opt_nogroup (1 << 2) /* not allow group */
 
 #define __acb_help __argparser_acb_help
-#define __acb_version __argparser_acb_help
+#define __acb_version __argparser_acb_version
 
 struct argparser;
 struct option;

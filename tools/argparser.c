@@ -345,7 +345,7 @@ static int handle_long(struct argparser *ap, int *i, char *tok, char *argv[])
 
 int __argparser_acb_help(struct argparser *ap, struct option *opt)
 {
-        printf("%s\n", argparser_help(ap));
+        printf("%s", argparser_help(ap));
         exit(0);
 }
 
