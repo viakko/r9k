@@ -8,15 +8,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static char *readfile(const char *path)
+static char *__fp_readall(FILE *fp)
 {
-        FILE *fp;
         size_t size;
         char *buf;
-
-        fp = fopen(path, "rb");
-        if (!fp)
-                return NULL;
 
         fseek(fp, 0, SEEK_END);
         size = ftell(fp);
@@ -31,8 +26,34 @@ static char *readfile(const char *path)
         fread(buf, 1, size, fp);
         buf[size] = '\0';
 
-        fclose(fp);
         return buf;
+}
+
+static char *readfile(const char *path)
+{
+        char *buf;
+        FILE *fp;
+
+        fp = fopen(path, "r");
+        if (!fp)
+                return NULL;
+
+        buf = __fp_readall(fp);
+        fclose(fp);
+
+        return buf;
+}
+
+static char *readin()
+{
+        static char *stdin_buf = NULL;
+
+        if (stdin_buf)
+                return stdin_buf;
+
+        stdin_buf = __fp_readall(stdin);
+
+        return stdin_buf;
 }
 
 #endif /* IO_UTILS_H_ */
