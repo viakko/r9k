@@ -30,7 +30,7 @@ static size_t __strlen_utf8(const char *str) // NOLINT(*-reserved-identifier)
         return len;
 }
 
-static size_t length(const char *str, int is_unicode)
+static size_t length(const char *str, bool is_unicode)
 {
         return is_unicode ? __strlen_utf8(str) : strlen(str);
 }

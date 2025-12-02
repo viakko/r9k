@@ -2,6 +2,8 @@
 #ifndef TYPEDEFS_H_
 #define TYPEDEFS_H_
 
+#include <stdbool.h>
+
 #define die(fmt, ...)                           \
 do {                                            \
         fprintf(stderr, fmt, ##__VA_ARGS__);    \
