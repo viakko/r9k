@@ -19,7 +19,7 @@
 #include <fx/typedefs.h>
 
 /* --flushdns */
-static int run_flush(void)
+static int on_flush(struct argparser *ap, struct option *opt)
 {
         int r;
 
@@ -42,7 +42,7 @@ static int run_flush(void)
         exit(0);
 }
 
-static int run_dns(void)
+static int on_dns(struct argparser *ap, struct option *opt)
 {
         struct __res_state res;
 
@@ -57,7 +57,7 @@ static int run_dns(void)
         exit(0);
 }
 
-static void run_resolv(void)
+static int on_resolv(struct argparser *ap, struct option *opt)
 {
         char buf[4096];
         FILE *fp;
@@ -75,7 +75,7 @@ static void run_resolv(void)
         exit(0);
 }
 
-static void run_iface(int verbose)
+static int on_iface(struct argparser *ap, struct option *opt)
 {
         struct ifaddrs *ifaddr, *ifa;
 
@@ -119,12 +119,12 @@ int main(int argc, char **argv)
         if (!ap)
                 return -1;
 
-        argparser_add1(ap, &opt_verbose, "v", "verbose", "show more information", opt_none);
-        argparser_add1(ap, &opt_dns, "dns", NULL, "show resolv DNS address and exit", opt_none);
-        argparser_add0(ap, &opt_resolv, "resolv", NULL, "show resolv.conf and exit", opt_none);
-        argparser_add0(ap, &opt_flush_dns, NULL, "flushdns", "flush system DNS cache and exit", opt_none);
-        argparser_add0(ap, &opt_iface, "i", "interface", "list interface address", opt_none);
-        argparser_add0(ap, &opt_help, "h", "help", "show this help message and exit", opt_none);
+        argparser_add1(ap, &opt_verbose, "v", "verbose", "show more information", NULL, opt_none);
+        argparser_add1(ap, &opt_dns, "dns", NULL, "show resolv DNS address and exit", on_dns, opt_none);
+        argparser_add0(ap, &opt_resolv, "resolv", NULL, "show resolv.conf and exit", on_resolv, opt_none);
+        argparser_add0(ap, &opt_flush_dns, NULL, "flushdns", "flush system DNS cache and exit", on_flush, opt_none);
+        argparser_add0(ap, &opt_iface, "i", "interface", "list interface address", on_iface, opt_none);
+        argparser_add0(ap, &opt_help, "h", "help", "show this help message and exit", NULL, opt_none);
 
         if (argparser_run(ap, argc, argv) != 0) {
                 fprintf(stderr, "%s\n", argparser_error(ap));
@@ -132,23 +132,11 @@ int main(int argc, char **argv)
                 return -1;
         }
 
-        if (opt_dns)
-                run_dns();
-
-        if (opt_resolv)
-                run_resolv();
-
-        if (opt_flush_dns)
-                run_flush();
-
         if (opt_help) {
                 printf("%s", argparser_help(ap));
                 argparser_free(ap);
                 exit(0);
         }
-
-        if (opt_iface)
-                run_iface(opt_verbose != NULL);
 
         return 0;
 }

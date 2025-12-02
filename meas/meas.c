@@ -35,6 +35,24 @@ static size_t length(const char *str, bool is_unicode)
         return is_unicode ? __strlen_utf8(str) : strlen(str);
 }
 
+static int on_help(struct argparser *ap, struct option *opt)
+{
+        printf("%s\n", argparser_help(ap));
+        exit(0);
+}
+
+static int on_version(struct argparser *ap, struct option *opt)
+{
+        printf("meas %s\n", MEAS_VERSION);
+        exit(0);
+}
+
+static int on_str(struct argparser *ap, struct option *opt)
+{
+        printf("%zu\n", length(opt->sval, argparser_find(ap, "unicode")));
+        exit(0);
+}
+
 int main(int argc, char **argv)
 {
         struct argparser *ap;
@@ -49,10 +67,10 @@ int main(int argc, char **argv)
                 exit(1);
         }
 
-        argparser_add0(ap, &help, "h", "help", "show this help message and exit", opt_none);
-        argparser_add0(ap, &version, "version", NULL, "show current version", opt_none);
-        argparser_add1(ap, &str, "s", "str", "as string type", opt_reqval);
-        argparser_add0(ap, &unicode, "u", "unicode", "use unicode parse string length", opt_none);
+        argparser_add0(ap, &help, "h", "help", "show this help message and exit", NULL, opt_none);
+        argparser_add0(ap, &version, "version", NULL, "show current version", NULL, opt_none);
+        argparser_add1(ap, &str, "s", "str", "as string type", on_str, opt_reqval);
+        argparser_add0(ap, &unicode, "u", "unicode", "use unicode parse string length", NULL, opt_none);
 
         if (argparser_run(ap, argc, argv) != 0) {
                 fprintf(stderr, "%s\n", argparser_error(ap));
@@ -60,26 +78,10 @@ int main(int argc, char **argv)
                 exit(1);
         }
 
-        if (help) {
-                printf("%s", argparser_help(ap));
-                goto cleanup;
-        }
-
-        if (version) {
-                printf("meas %s\n", MEAS_VERSION);
-                goto cleanup;
-        }
-
-        if (str) {
-                printf("%zu\n", length(str->sval, !IS_NULL(unicode)));
-                goto cleanup;
-        }
-
         /* default */
         if (argparser_count(ap) > 0)
                 printf("%zu\n", length(argparser_val(ap, 0), !IS_NULL(unicode)));
 
-cleanup:
         argparser_free(ap);
 
         return 0;

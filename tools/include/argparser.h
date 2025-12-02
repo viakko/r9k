@@ -28,6 +28,12 @@
 #define opt_concat  (1 << 1) /* -O1 -O2 */
 #define opt_nogroup (1 << 2) /* not allow group */
 
+struct argparser;
+struct option;
+
+/* return zero means success otherwith error. */
+typedef int (*fn_argparser_callback)(struct argparser *, struct option *);
+
 struct option
 {
         const char*  shortopt;
@@ -42,9 +48,8 @@ struct option
         /* built-in */
         uint32_t _capacity;
         struct option** _refs;
+        fn_argparser_callback _cb;
 };
-
-struct argparser;
 
 /* If a result doesn't equal to 0 that mean error. */
 struct argparser *argparser_create(const char *name);
@@ -59,6 +64,7 @@ int argparser_add0(struct argparser *ap,
                    const char *shortopt,
                    const char *longopt,
                    const char *tips,
+                   fn_argparser_callback cb,
                    uint32_t flags); /* no argument */
 
 int argparser_add1(struct argparser *ap,
@@ -66,6 +72,7 @@ int argparser_add1(struct argparser *ap,
                    const char *shortopt,
                    const char *longopt,
                    const char *tips,
+                   fn_argparser_callback cb,
                    uint32_t flags); /* 1 argument */
 
 int argparser_addn(struct argparser *ap,
@@ -74,11 +81,13 @@ int argparser_addn(struct argparser *ap,
                    const char *longopt,
                    int max,
                    const char *tips,
+                   fn_argparser_callback cb,
                    uint32_t flags); /* n argument */
 
 /* Parsing arguments */
 int argparser_run(struct argparser *ap, int argc, char *argv[]);
 const char *argparser_error(struct argparser *ap);
+struct option *argparser_find(struct argparser *ap, const char *name);
 
 /* Get position values */
 uint32_t argparser_count(struct argparser *ap);

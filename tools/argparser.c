@@ -376,9 +376,10 @@ int argparser_add0(struct argparser *ap,
                    const char *shortopt,
                    const char *longopt,
                    const char *tips,
+                   fn_argparser_callback cb,
                    uint32_t flags)
 {
-        return argparser_addn(ap, pp_option, shortopt, longopt, 0, tips, flags);
+        return argparser_addn(ap, pp_option, shortopt, longopt, 0, tips, cb, flags);
 }
 
 int argparser_add1(struct argparser *ap,
@@ -386,9 +387,10 @@ int argparser_add1(struct argparser *ap,
                    const char *shortopt,
                    const char *longopt,
                    const char *tips,
+                   fn_argparser_callback cb,
                    uint32_t flags)
 {
-        return argparser_addn(ap, pp_option, shortopt, longopt, 1, tips, flags);
+        return argparser_addn(ap, pp_option, shortopt, longopt, 1, tips, cb, flags);
 }
 
 int argparser_addn(struct argparser *ap,
@@ -397,6 +399,7 @@ int argparser_addn(struct argparser *ap,
                    const char *longopt,
                    int max,
                    const char *tips,
+                   fn_argparser_callback cb,
                    uint32_t flags)
 {
         int r;
@@ -414,6 +417,7 @@ int argparser_addn(struct argparser *ap,
         opt->tips = tips;
         opt->flags = flags;
         opt->_refs = pp_option;
+        opt->_cb = cb;
 
         r = add_option(ap, opt);
         if (r != 0) {
@@ -422,6 +426,23 @@ int argparser_addn(struct argparser *ap,
         }
 
         return r;
+}
+
+static int execacb(struct argparser *ap)
+{
+        int r;
+        struct option *opt;
+
+        for (int i = 0; i < ap->nopt; i++) {
+                opt = ap->opts[i];
+                if (*opt->_refs != NULL && opt->_cb != NULL) {
+                        r = opt->_cb(ap, opt);
+                        if (r != 0)
+                                return -1;
+                }
+        }
+
+        return 0;
 }
 
 int argparser_run(struct argparser *ap, int argc, char *argv[])
@@ -456,12 +477,43 @@ int argparser_run(struct argparser *ap, int argc, char *argv[])
                         return r;
         }
 
+        r = execacb(ap);
+        if (r != 0)
+                return r;
+
         return 0;
 }
 
 const char *argparser_error(struct argparser *ap)
 {
         return ap->error;
+}
+
+struct option *argparser_find(struct argparser *ap, const char *name)
+{
+        size_t size;
+        struct option *opt;
+
+        size = strlen(name);
+
+        if (size > 1) {
+                opt = lookup_long(ap, name);
+                if (opt)
+                        goto found;
+
+                opt = lookup_short_str(ap, name);
+                if (opt)
+                        goto found;
+        }
+
+        opt = lookup_short_char(ap, name[0]);
+        if (opt)
+                goto found;
+
+        return NULL;
+
+found:
+        return *opt->_refs ? opt : NULL;
 }
 
 uint32_t argparser_count(struct argparser *ap)
