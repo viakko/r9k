@@ -24,7 +24,7 @@ static char *__fp_readall(FILE *fp)
                         cap = cap ? cap + (cap >> 1) : sizeof(chunk) * 2;
                         if (cap < len + n + 1)
                                 cap = len + n + 1;
-                        
+
                         tmp = realloc(buf, cap);
                         if (!tmp) {
                                 if (buf)
@@ -48,6 +48,8 @@ static char *__fp_readall(FILE *fp)
         return buf;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
 static char *readfile(const char *path)
 {
         char *buf;
@@ -62,5 +64,6 @@ static char *readfile(const char *path)
 
         return buf;
 }
+#pragma GCC diagnostic pop
 
 #endif /* IO_UTILS_H_ */
