@@ -27,15 +27,9 @@ static size_t __strlen_utf8(const char *str) // NOLINT(*-reserved-identifier)
         return len;
 }
 
-static size_t length(const char *str, bool is_unicode)
+static size_t length(const char *str, bool character)
 {
-        return is_unicode ? __strlen_utf8(str) : strlen(str);
-}
-
-static int on_str(struct argparser *ap, struct option *opt)
-{
-        printf("%zu\n", length(opt->sval, argparser_find(ap, "unicode")));
-        exit(0);
+        return character ? __strlen_utf8(str) : strlen(str);
 }
 
 int main(int argc, char **argv)
@@ -43,8 +37,7 @@ int main(int argc, char **argv)
         struct argparser *ap;
         struct option *help;
         struct option *version;
-        struct option *str;
-        struct option *unicode;
+        struct option *character;
 
         ap = argparser_create("meas", MEAS_VERSION);
         if (!ap) {
@@ -54,8 +47,7 @@ int main(int argc, char **argv)
 
         argparser_add0(ap, &help, "h", "help", "show this help message and exit", __acb_help, opt_none);
         argparser_add0(ap, &version, "version", NULL, "show current version", __acb_version, opt_none);
-        argparser_add1(ap, &str, "s", "str", "as string type", on_str, opt_reqval);
-        argparser_add0(ap, &unicode, "u", "unicode", "use unicode parse string length", NULL, opt_none);
+        argparser_add0(ap, &character, "c", NULL, "as character count", NULL, opt_none);
 
         if (argparser_run(ap, argc, argv) != 0) {
                 fprintf(stderr, "%s\n", argparser_error(ap));
@@ -65,13 +57,13 @@ int main(int argc, char **argv)
 
         /* default */
         if (argparser_count(ap) > 0) {
-                printf("%zu\n", length(argparser_val(ap, 0), !IS_NULL(unicode)));
+                printf("%zu\n", length(argparser_val(ap, 0), !IS_NULL(character)));
                 goto end;
         }
 
         char *buf = readin();
         if (buf) {
-                printf("%zu\n", length(buf, !IS_NULL(unicode)));
+                printf("%zu\n", length(buf, !IS_NULL(character)));
                 free(buf);
         }
 
