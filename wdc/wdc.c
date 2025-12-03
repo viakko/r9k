@@ -6,9 +6,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <argparser.h>
-#include <ctype.h>
 #include <string.h>
 #include <r9k/typedefs.h>
+
+#include "r9k/ioutils.h"
 
 #define MEAS_VERSION "1.0"
 
@@ -19,10 +20,6 @@ static size_t __strlen_utf8(const char *str) // NOLINT(*-reserved-identifier)
         while (*str) {
                 unsigned char c = (unsigned char) *str;
                 str++;
-
-                if (isspace(c))
-                        continue;
-
                 if ((c & 0xC0) != 0x80)
                         len++;
         }
@@ -67,9 +64,18 @@ int main(int argc, char **argv)
         }
 
         /* default */
-        if (argparser_count(ap) > 0)
+        if (argparser_count(ap) > 0) {
                 printf("%zu\n", length(argparser_val(ap, 0), !IS_NULL(unicode)));
+                goto end;
+        }
 
+        char *buf = readin();
+        if (buf) {
+                printf("%zu\n", length(buf, !IS_NULL(unicode)));
+                free(buf);
+        }
+
+end:
         argparser_free(ap);
 
         return 0;
