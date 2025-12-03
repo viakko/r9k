@@ -12,7 +12,7 @@
 
 #include <r9k/ioutils.h>
 
-#define MEAS_VERSION "1.0"
+#define WDC_VERSION "1.0"
 
 static size_t utf8len(const char *str)
 {
@@ -82,7 +82,7 @@ int main(int argc, char **argv)
         const char *buf;
         bool need_free = false;
 
-        ap = argparser_create("meas", MEAS_VERSION);
+        ap = argparser_create("wdc", WDC_VERSION);
         if (!ap) {
                 fprintf(stderr, "Failed to create argparser\n");
                 exit(1);
