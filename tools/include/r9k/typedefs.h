@@ -10,8 +10,6 @@ do {                                            \
         exit(EXIT_FAILURE);                     \
 } while (0)
 
-#define pdb(...) printf(__VA_ARGS__)
-
 #define streq(a, b) (strcmp(a, b) == 0)
 #define strne(a, b) (!streq(a, b))
 

@@ -21,7 +21,6 @@ static char *__fp_readall(FILE *fp)
         size_t n;
 
         while ((n = fread(chunk, 1, sizeof(chunk), fp)) > 0) {
-                printf("n = %zu\n", n);
                 if (len + n + 1 > cap) {
                         cap = cap ? cap + (cap >> 1) : sizeof(chunk) * 2;
                         if (cap < len + n + 1)

@@ -36,8 +36,8 @@ static void write_to_clip(const char *text)
 int main(int argc, char **argv)
 {
         struct argparser *ap;
-        struct option *help;
-        struct option *version;
+        struct option *help, *version;
+        struct option *cat;
 
         ap = argparser_create("clip", "1.0");
         if (!ap) {
@@ -47,6 +47,7 @@ int main(int argc, char **argv)
 
         argparser_add0(ap, &help, "h", "help", "show this help message and exit", __acb_help, opt_none);
         argparser_add0(ap, &version, "version", NULL, "show version and exit", __acb_version, opt_none);
+        argparser_add0(ap, &cat, "cat", NULL, "copy to clip and cat content", NULL, opt_none);
 
         if (argparser_run(ap, argc, argv) != 0) {
                 fprintf(stderr, "%s\n", argparser_error(ap));
@@ -57,6 +58,8 @@ int main(int argc, char **argv)
         char *buf = readin();
         if (buf) {
                 write_to_clip(buf);
+                if (cat)
+                        printf("%s", buf);
                 free(buf);
         }
 
