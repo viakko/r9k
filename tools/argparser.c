@@ -570,6 +570,9 @@ const char *argparser_help(struct argparser *ap)
                         }
                 }
 
+                if (opt->flags & opt_reqval)
+                        n += snprintf(ap->help + n, sizeof(ap->help) - n, " <value>");
+
                 if (opt->tips)
                         n += snprintf(ap->help + n, sizeof(ap->help) - n, "\n    %s\n", opt->tips);
 
