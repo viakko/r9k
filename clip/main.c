@@ -13,7 +13,7 @@
 #include <r9k/argparser.h>
 #include <r9k/ioutils.h>
 
-static void copy_to_clipboard(struct option *opt_quiet)
+static void write_clipboard(struct option *opt_quiet)
 {
         char *inbuf;
 
@@ -28,6 +28,11 @@ static void copy_to_clipboard(struct option *opt_quiet)
                 printf("%s", inbuf);
 
         free(inbuf);
+}
+
+static void watch_clipboard(const char *text)
+{
+        printf("%s\n", text);
 }
 
 int main(int argc, char **argv)
@@ -58,7 +63,7 @@ int main(int argc, char **argv)
         }
 
         if (opt_daemon)
-                clip_watch();
+                clip_watch(watch_clipboard);
 
         if (opt_print) {
                 char *buf = clip_read();
@@ -70,7 +75,7 @@ int main(int argc, char **argv)
                 return 0;
         }
 
-        copy_to_clipboard(opt_quiet);
+        write_clipboard(opt_quiet);
         argparser_free(ap);
 
         return 0;

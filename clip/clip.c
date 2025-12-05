@@ -43,15 +43,18 @@ char *clip_read(void)
         return __clip_read();
 }
 
-void clip_watch(void)
+void clip_watch(PFN_clip_watch watch)
 {
         char *prev = NULL;
+
+        if (!watch)
+                return;
 
         while (1) {
                 char *cur = clip_read();
 
                 if (cur && !strblank(cur) && (!prev || strcmp(cur, prev) != 0)) {
-                        printf("%s\n", cur);
+                        watch(cur);
                         free(prev);
                         prev = cur;
                         goto sleep;
