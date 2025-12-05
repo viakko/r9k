@@ -1,24 +1,25 @@
-#include "../tools/include/r9k/argparser.h"
 /*
 * SPDX-License-Identifier: MIT
  * Copyright (c) 2025 viakko
  */
+#include "clip.h"
+//std
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 //r9k
-#include <r9k/ioutils.h>
+#include <r9k/typedefs.h>
 
-static void write_to_clip(const char *text)
+int clip_write(const char *text)
 {
-        if (!text || strlen(text) == 0)
-                return;
+        FILE* pipe;
 
-        FILE* pipe = popen("pbcopy", "w");
-        if (!pipe) {
-                perror("popen failed");
-                return;
-        }
+        if (!text || strlen(text) == 0)
+                return 0;
+
+        pipe = popen("pbcopy", "w");
+        if (!pipe)
+                return -1;
 
         size_t len = strlen(text);
         size_t written = fwrite(text, 1, len, pipe);
@@ -26,43 +27,57 @@ static void write_to_clip(const char *text)
         if (written != len) {
                 perror("fwrite failed");
                 pclose(pipe);
-                return;
+                return -1;
         }
 
         pclose(pipe);
+        return 0;
 }
 
-int main(int argc, char **argv)
+char *clip_read()
 {
-        struct argparser *ap;
-        struct option *help, *version;
-        struct option *quiet;
+        FILE *pipe = popen("pbpaste", "r");
+        if (!pipe)
+                return NULL;
 
-        ap = argparser_create("clip", "1.0");
-        if (!ap) {
-                fprintf(stderr, "Failed to create argparser\n");
-                exit(1);
+        char *buf = NULL;
+        size_t cap = 256;
+        size_t pos = 0;
+        size_t n;
+
+        buf = malloc(cap);
+        if (!buf) {
+                pclose(pipe);
+                return NULL;
         }
 
-        argparser_add0(ap, &help, "h", "help", "show this help message and exit", __acb_help, opt_none);
-        argparser_add0(ap, &version, "version", NULL, "show version and exit", __acb_version, opt_none);
-        argparser_add0(ap, &quiet, NULL, "quiet", "copy and not print content", NULL, opt_none);
+        while (1) {
+                if (pos >= cap) {
+                        cap = cap + (cap >> 1);
+                        char *tmp = realloc(buf, cap + 1);
+                        if (!tmp)
+                                goto err;
 
-        if (argparser_run(ap, argc, argv) != 0) {
-                fprintf(stderr, "%s\n", argparser_error(ap));
-                argparser_free(ap);
-                exit(1);
+                        buf = tmp;
+                }
+
+                n = fread(buf + pos, 1, cap - pos, pipe);
+                if (n == 0) {
+                        if (ferror(pipe))
+                                goto err;
+                        break;
+                }
+
+                pos += n;
         }
 
-        char *buf = readin();
-        if (buf) {
-                write_to_clip(buf);
-                if (!quiet)
-                        printf("%s", buf);
-                free(buf);
-        }
+        buf[pos] = '\0';
 
-        argparser_free(ap);
+        pclose(pipe);
+        return buf;
 
-        return 0;
+err:
+        pclose(pipe);
+        free(buf);
+        return NULL;
 }
