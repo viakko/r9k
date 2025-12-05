@@ -35,6 +35,7 @@ int main(int argc, char **argv)
         struct argparser *ap;
         struct option *opt_help;
         struct option *opt_version;
+        struct option *opt_daemon;
         struct option *opt_quiet;
         struct option *opt_print;
 
@@ -46,6 +47,7 @@ int main(int argc, char **argv)
 
         argparser_add0(ap, &opt_help, "h", "help", "show this help message and exit", __acb_help, opt_none);
         argparser_add0(ap, &opt_version, "version", NULL, "show version and exit", __acb_version, opt_none);
+        argparser_add0(ap, &opt_daemon, "d", NULL, "copy and not print content", NULL, opt_none);
         argparser_add0(ap, &opt_quiet, NULL, "quiet", "copy and not print content", NULL, opt_none);
         argparser_add0(ap, &opt_print, NULL, "print", "print clipboard content to print content", NULL, opt_none);
 
@@ -54,6 +56,9 @@ int main(int argc, char **argv)
                 argparser_free(ap);
                 exit(1);
         }
+
+        if (opt_daemon)
+                clip_watch();
 
         if (opt_print) {
                 char *buf = clip_read();

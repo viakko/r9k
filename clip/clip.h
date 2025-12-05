@@ -2,10 +2,11 @@
 * SPDX-License-Identifier: MIT
  * Copyright (c) 2025 viakko
  */
-#ifndef CLIPBOARD_H_
-#define CLIPBOARD_H_
+#ifndef CLIP_H_
+#define CLIP_H_
 
 int clip_write(const char *text);
-char *clip_read();
+char *clip_read(void);
+void clip_watch(void);
 
-#endif /* CLIPBOARD_H_ */
+#endif /*  CLIP_H_ */

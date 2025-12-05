@@ -1,14 +1,18 @@
 /*
-* SPDX-License-Identifier: MIT
+ * SPDX-License-Identifier: MIT
  * Copyright (c) 2025 viakko
  */
 #include "clip.h"
-//std
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-//r9k
-#include <r9k/typedefs.h>
+#include <Carbon/Carbon.h>
+#include "platform/clipboard.h"
+
+static int strblank(const char *str)
+{
+        return !str || !*str || strspn(str, "\t\r\n") == strlen(str);
+}
 
 int clip_write(const char *text)
 {
@@ -34,50 +38,29 @@ int clip_write(const char *text)
         return 0;
 }
 
-char *clip_read()
+char *clip_read(void)
 {
-        FILE *pipe = popen("pbpaste", "r");
-        if (!pipe)
-                return NULL;
+        return __clip_read();
+}
 
-        char *buf = NULL;
-        size_t cap = 256;
-        size_t pos = 0;
-        size_t n;
-
-        buf = malloc(cap);
-        if (!buf) {
-                pclose(pipe);
-                return NULL;
-        }
+void clip_watch(void)
+{
+        char *prev = NULL;
 
         while (1) {
-                if (pos >= cap) {
-                        cap = cap + (cap >> 1);
-                        char *tmp = realloc(buf, cap + 1);
-                        if (!tmp)
-                                goto err;
+                char *cur = clip_read();
 
-                        buf = tmp;
+                if (cur && !strblank(cur) && (!prev || strcmp(cur, prev) != 0)) {
+                        printf("%s\n", cur);
+                        free(prev);
+                        prev = cur;
+                        goto sleep;
                 }
 
-                n = fread(buf + pos, 1, cap - pos, pipe);
-                if (n == 0) {
-                        if (ferror(pipe))
-                                goto err;
-                        break;
-                }
-
-                pos += n;
+                free(cur);
+sleep:
+                sleep(1);
         }
 
-        buf[pos] = '\0';
-
-        pclose(pipe);
-        return buf;
-
-err:
-        pclose(pipe);
-        free(buf);
-        return NULL;
+        free(prev);
 }

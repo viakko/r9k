@@ -12,7 +12,7 @@ all: $(BIN)
 
 $(BIN): $(OBJS)
 	@mkdir -p $(dir $@)
-	$(CC) $(OBJS) $(CFLAGS) $(LINKDIR) $(LINKS) -o $@
+	$(CC) $(OBJS) $(CFLAGS) $(LINKDIR) $(LINKS) $(FRAMEWORKS) -o $@
 
 $(OBJDIR)/%.o: %.c
 	@mkdir -p $(dir $@)
