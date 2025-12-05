@@ -35,7 +35,7 @@ struct argparser;
 struct option;
 
 /* return zero means success otherwith error. */
-typedef int (*fn_argparser_callback)(struct argparser *, struct option *);
+typedef int (*PFN_argparser_callback)(struct argparser *, struct option *);
 
 struct option
 {
@@ -51,7 +51,7 @@ struct option
         /* built-in */
         uint32_t _capacity;
         struct option** _refs;
-        fn_argparser_callback _cb;
+        PFN_argparser_callback _cb;
 };
 
 int __argparser_acb_help(struct argparser *ap, struct option *opt);
@@ -70,7 +70,7 @@ int argparser_add0(struct argparser *ap,
                    const char *shortopt,
                    const char *longopt,
                    const char *tips,
-                   fn_argparser_callback cb,
+                   PFN_argparser_callback cb,
                    uint32_t flags); /* no argument */
 
 int argparser_add1(struct argparser *ap,
@@ -78,7 +78,7 @@ int argparser_add1(struct argparser *ap,
                    const char *shortopt,
                    const char *longopt,
                    const char *tips,
-                   fn_argparser_callback cb,
+                   PFN_argparser_callback cb,
                    uint32_t flags); /* 1 argument */
 
 int argparser_addn(struct argparser *ap,
@@ -87,7 +87,7 @@ int argparser_addn(struct argparser *ap,
                    const char *longopt,
                    int max,
                    const char *tips,
-                   fn_argparser_callback cb,
+                   PFN_argparser_callback cb,
                    uint32_t flags); /* n argument */
 
 /* Parsing arguments */

@@ -392,7 +392,7 @@ int argparser_add0(struct argparser *ap,
                    const char *shortopt,
                    const char *longopt,
                    const char *tips,
-                   fn_argparser_callback cb,
+                   PFN_argparser_callback cb,
                    uint32_t flags)
 {
         return argparser_addn(ap, pp_option, shortopt, longopt, 0, tips, cb, flags);
@@ -403,7 +403,7 @@ int argparser_add1(struct argparser *ap,
                    const char *shortopt,
                    const char *longopt,
                    const char *tips,
-                   fn_argparser_callback cb,
+                   PFN_argparser_callback cb,
                    uint32_t flags)
 {
         return argparser_addn(ap, pp_option, shortopt, longopt, 1, tips, cb, flags);
@@ -415,7 +415,7 @@ int argparser_addn(struct argparser *ap,
                    const char *longopt,
                    int max,
                    const char *tips,
-                   fn_argparser_callback cb,
+                   PFN_argparser_callback cb,
                    uint32_t flags)
 {
         int r;
