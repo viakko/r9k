@@ -5,49 +5,74 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <errno.h>
 //r9k
 #include <r9k/argparser.h>
 #include <r9k/typedefs.h>
 #include <r9k/ioutils.h>
 
-#include "wordc.h"
+#include "charc.h"
 
 #define COUNT_VERSION "1.0"
 
-static const char *strread(struct argparser *ap, struct option *f, bool *p_need_free)
-{
-        const char *buf = NULL;
+struct option *c;
+struct option *l;
+struct option *f;
 
+static size_t count(const char *text)
+{
+        return l ? linec(text) : charc(text, c != NULL);
+}
+
+static void do_file()
+{
+        size_t n, r = 0;
+        char buf[1024 * 16];
+
+        FILE *fp = fopen(f->sval, "r");
+        if (!fp)
+                die("Failed to open file '%s'\n", f->sval);
+
+        while ((n = fread(buf, 1, sizeof(buf) - 1, fp)) > 0) {
+                buf[n] = '\0';
+                r += count(buf);
+        }
+
+        fclose(fp);
+        printf("%zu\n", r);
+}
+
+static void do_stdin()
+{
+        size_t n, r = 0;
+        char buf[1024 * 16];
+
+        while ((n = fread(buf, 1, sizeof(buf) - 1, stdin)) > 0) {
+                buf[n] = '\0';
+                r += count(buf);
+        }
+
+        printf("%zu\n", r);
+}
+
+static void do_count(struct argparser *ap)
+{
         if (f) {
-                buf = readfile(f->sval);
-                if (!buf)
-                        return NULL;
-                *p_need_free = true;
-                return buf;
+                do_file();
+                return;
         }
 
         if (argparser_count(ap) > 0) {
-                buf = argparser_val(ap, 0);
-                *p_need_free = false;
-        } else {
-                buf = readin();
-                if (!buf)
-                        return NULL;
-                *p_need_free = true;
+                printf("%zu\n", count(argparser_val(ap, 0)));
+                return;
         }
 
-        return buf;
+        do_stdin();
 }
 
 int main(int argc, char **argv)
 {
         struct argparser *ap;
-        struct option *help, *version, *c, *l, *f;
-
-        const char *buf;
-        bool need_free = false;
+        struct option *help, *version;
 
         ap = argparser_create("count", COUNT_VERSION);
         if (!ap) {
@@ -67,23 +92,7 @@ int main(int argc, char **argv)
                 return -1;
         }
 
-        if ((buf = strread(ap, f, &need_free)) == NULL) {
-                fprintf(stderr, "%s\n", strerror(errno));
-                return -1;
-        }
-
-        /* calculate lines */
-        if (l) {
-                printf("%zu\n", linec(buf));
-                goto end;
-        }
-
-        /* default calculates word count */
-        printf("%zu\n", wordc(buf, c != NULL));
-
-end:
-        if (need_free)
-                free((void *) buf);
+        do_count(ap);
 
         argparser_free(ap);
 

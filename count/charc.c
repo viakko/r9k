@@ -3,7 +3,7 @@
  * Copyright (c) 2025 viakko
  *
  */
-#include "wordc.h"
+#include "charc.h"
 //std
 #include <string.h>
 
@@ -39,7 +39,7 @@ size_t linec(const char *str)
         return count;
 }
 
-size_t wordc(const char *str, bool is_utf8)
+size_t charc(const char *str, bool is_utf8)
 {
         return length(str, is_utf8);
 }
