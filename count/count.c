@@ -14,65 +14,71 @@
 
 #define COUNT_VERSION "1.0"
 
-struct option *c;
-struct option *l;
-struct option *f;
+struct option *opt_chars;
+struct option *opt_lines;
+struct option *opt_files;
 
-static size_t count(const char *text)
+static size_t count_units(const char *text)
 {
-        return l ? linec(text) : charc(text, c != NULL);
+        return opt_lines ? linec(text) : charc(text, opt_chars != NULL);
 }
 
-static void do_file()
+static void count_file(const char *filename)
 {
         size_t n, r = 0;
         char buf[1024 * 16];
 
-        FILE *fp = fopen(f->sval, "r");
+        FILE *fp = fopen(filename, "r");
         if (!fp)
-                die("Failed to open file '%s'\n", f->sval);
+                die("Failed to open file '%s'\n", filename);
 
         while ((n = fread(buf, 1, sizeof(buf) - 1, fp)) > 0) {
                 buf[n] = '\0';
-                r += count(buf);
+                r += count_units(buf);
         }
 
         fclose(fp);
         printf("%zu\n", r);
 }
 
-static void do_stdin()
+static void count_stdin()
 {
         size_t n, r = 0;
         char buf[1024 * 16];
 
         while ((n = fread(buf, 1, sizeof(buf) - 1, stdin)) > 0) {
                 buf[n] = '\0';
-                r += count(buf);
+                r += count_units(buf);
         }
 
         printf("%zu\n", r);
 }
 
-static void do_count(struct argparser *ap)
+static void count_input(const char *text)
 {
-        if (f) {
-                do_file();
+        printf("%zu\n", count_units(text));
+}
+
+static void process(struct argparser *ap)
+{
+        if (opt_files) {
+                count_file(opt_files->sval);
                 return;
         }
 
         if (argparser_count(ap) > 0) {
-                printf("%zu\n", count(argparser_val(ap, 0)));
+                count_input(argparser_val(ap, 0));
                 return;
         }
 
-        do_stdin();
+        count_stdin();
 }
 
 int main(int argc, char **argv)
 {
         struct argparser *ap;
-        struct option *help, *version;
+        struct option *opt_help;
+        struct option *opt_version;
 
         ap = argparser_create("count", COUNT_VERSION);
         if (!ap) {
@@ -80,11 +86,11 @@ int main(int argc, char **argv)
                 exit(1);
         }
 
-        argparser_add0(ap, &help, "h", "help", "show this help message and exit", __acb_help, opt_none);
-        argparser_add0(ap, &version, "version", NULL, "show current version", __acb_version, opt_none);
-        argparser_add0(ap, &c, "c", NULL, "character count", NULL, opt_none);
-        argparser_add0(ap, &l, "l", NULL, "line count", NULL, opt_none);
-        argparser_add1(ap, &f, "f", NULL, "read file contents", NULL, opt_reqval);
+        argparser_add0(ap, &opt_help, "h", "help", "show this help message and exit", __acb_help, opt_none);
+        argparser_add0(ap, &opt_version, "version", NULL, "show current version", __acb_version, opt_none);
+        argparser_add0(ap, &opt_chars, "c", NULL, "character count", NULL, opt_none);
+        argparser_add0(ap, &opt_lines, "l", NULL, "line count", NULL, opt_none);
+        argparser_add1(ap, &opt_files, "f", NULL, "read file contents", NULL, opt_reqval);
 
         if (argparser_run(ap, argc, argv) != 0) {
                 fprintf(stderr, "%s\n", argparser_error(ap));
@@ -92,7 +98,7 @@ int main(int argc, char **argv)
                 return -1;
         }
 
-        do_count(ap);
+        process(ap);
 
         argparser_free(ap);
 
