@@ -21,14 +21,14 @@
 #include <r9k/argparser.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
-//r9k
+#include <r9k/string.h>
 #include <r9k/attributes.h>
 
-#define MAX_UNIT 256
-#define MAX_VAL  32
+#define MAX_OPT  16 /* default */
+#define MAX_VAL  64
+#define MAX_MSG  4096
 #define LONG     1
 #define SHORT    0
 
@@ -40,16 +40,17 @@ struct argparser
         const char *version;
 
         /* options */
-        struct option *opts[MAX_UNIT];
+        struct option **opts;
         uint32_t nopt;
+        uint32_t maxopt;
 
         /* position value */
         const char *vals[MAX_VAL];
         uint32_t nval;
 
         /* buff */
-        char error[4096];
-        char help[4096];
+        char error[MAX_MSG];
+        char help[MAX_MSG];
 };
 
 static void error(struct argparser *ap, const char *fmt, ...)
@@ -60,12 +61,24 @@ static void error(struct argparser *ap, const char *fmt, ...)
         va_end(va);
 }
 
+static int ensure_option_capacity(struct argparser *ap)
+{
+        if (ap->nopt >= ap->maxopt) {
+                struct option **tmp;
+                ap->maxopt *= 2;
+                tmp = realloc(ap->opts, ap->maxopt * sizeof(struct option *));
+                if (!tmp)
+                        return -ENOMEM;
+                ap->opts = tmp;
+        }
+
+        return 0;
+}
+
 static int add_option(struct argparser *ap, struct option *opt)
 {
-        if (ap->nopt >= MAX_UNIT) {
-                error(ap, "option out of %d", MAX_UNIT);
-                return -EOVERFLOW;
-        }
+        if (ensure_option_capacity(ap) != 0)
+                return -1;
 
         ap->opts[ap->nopt++] = opt;
 
@@ -183,7 +196,7 @@ static struct option *lookup_short_str(struct argparser *ap, const char *shortop
 
         for (uint32_t i = 0; i < ap->nopt; i++) {
                 opt = ap->opts[i];
-                if (opt->shortopt && strcmp(shortopt, opt->shortopt) == 0)
+                if (opt->shortopt && streq(shortopt, opt->shortopt))
                         return opt;
         }
 
@@ -196,7 +209,7 @@ static struct option *lookup_long(struct argparser *ap, const char *longopt)
 
         for (uint32_t i = 0; i < ap->nopt; i++) {
                 opt = ap->opts[i];
-                if (opt->longopt && strcmp(longopt, opt->longopt) == 0)
+                if (opt->longopt && streq(longopt, opt->longopt))
                         return opt;
         }
 
@@ -368,6 +381,14 @@ struct argparser *argparser_create(const char *name, const char *version)
         ap->name = name;
         ap->version = version;
 
+        ap->maxopt = MAX_OPT;
+        ap->opts = calloc(ap->maxopt, sizeof(*ap->opts));
+        if (!ap->opts) {
+                error(ap, strerror(errno));
+                argparser_free(ap);
+                return NULL;
+        }
+
         return ap;
 }
 
@@ -376,12 +397,14 @@ void argparser_free(struct argparser *ap)
         if (!ap)
                 return;
 
-        for (uint32_t i = 0; i < ap->nopt; i++) {
-                struct option *opt = ap->opts[i];
-                if (opt->vals != NULL)
-                        free(opt->vals);
+        if (ap->opts) {
+                for (uint32_t i = 0; i < ap->nopt; i++) {
+                        struct option *opt = ap->opts[i];
+                        if (opt->vals != NULL)
+                                free(opt->vals);
 
-                free(ap->opts[i]);
+                        free(ap->opts[i]);
+                }
         }
 
         free(ap);
