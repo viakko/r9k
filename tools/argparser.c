@@ -205,7 +205,7 @@ static struct option *lookup_long(struct argparser *ap, const char *longopt)
 
 static int __handle_short_concat(struct argparser *ap, char *tok, int *i, char *argv[]) // NOLINT(*-reserved-identifier)
 {
-        char *eqval = NULL;
+        char *defval = NULL;
         struct option *opt;
         char tmp[2];
         size_t len;
@@ -217,9 +217,9 @@ static int __handle_short_concat(struct argparser *ap, char *tok, int *i, char *
         opt = lookup_short_str(ap, tmp);
         if (opt != NULL && (opt->flags & opt_concat)) {
                 if (len > 1)
-                        eqval = tok + 1;
+                        defval = tok + 1;
 
-                int r = try_take_val(ap, opt, SHORT, tmp, eqval, i, argv);
+                int r = try_take_val(ap, opt, SHORT, tmp, defval, i, argv);
                 if (r < 0)
                         return r;
 
