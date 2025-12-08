@@ -21,6 +21,7 @@
 #include <r9k/argparser.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <r9k/string.h>
@@ -91,8 +92,9 @@ static int ensure_values_capacity(struct argparser *ap)
 
 static int add_option(struct argparser *ap, struct option *opt)
 {
-        if (ensure_option_capacity(ap) != 0)
-                return -1;
+        int r;
+        if ((r = ensure_option_capacity(ap)) != 0)
+                return r;
 
         ap->opts[ap->nopt++] = opt;
 
@@ -101,8 +103,9 @@ static int add_option(struct argparser *ap, struct option *opt)
 
 static int store_position_val(struct argparser *ap, const char *val)
 {
-        if (ensure_values_capacity(ap) != 0)
-                return -1;
+        int r;
+        if ((r = ensure_values_capacity(ap)) != 0)
+                return r;
 
         ap->vals[ap->nval++] = val;
 
@@ -468,6 +471,17 @@ int argparser_addn(struct argparser *ap,
 {
         int r;
         struct option *opt;
+
+        /* check exists */
+        if (longopt && lookup_long(ap, longopt)) {
+                error(ap, "long option --%s already exists", longopt);
+                return -EINVAL;
+        }
+
+        if (shortopt && lookup_short_str(ap, shortopt)) {
+                error(ap, "short option -%s already exists", shortopt);
+                return -EINVAL;
+        }
 
         *pp_option = NULL;
 
