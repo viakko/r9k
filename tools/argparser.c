@@ -26,11 +26,10 @@
 #include <r9k/string.h>
 #include <r9k/attributes.h>
 
-#define MAX_OPT  16 /* default */
-#define MAX_VAL  64
-#define MAX_MSG  4096
-#define LONG     1
-#define SHORT    0
+#define MIN_CAP 8 /* default */
+#define MAX_MSG 4096
+#define LONG    1
+#define SHORT   0
 
 #define OPT_PREFIX(is_long) (is_long ? "--" : "-")
 
@@ -42,11 +41,12 @@ struct argparser
         /* options */
         struct option **opts;
         uint32_t nopt;
-        uint32_t maxopt;
+        uint32_t optcap;
 
         /* position value */
-        const char *vals[MAX_VAL];
+        const char **vals;
         uint32_t nval;
+        uint32_t valcap;
 
         /* buff */
         char error[MAX_MSG];
@@ -63,13 +63,27 @@ static void error(struct argparser *ap, const char *fmt, ...)
 
 static int ensure_option_capacity(struct argparser *ap)
 {
-        if (ap->nopt >= ap->maxopt) {
+        if (ap->nopt >= ap->optcap) {
                 struct option **tmp;
-                ap->maxopt *= 2;
-                tmp = realloc(ap->opts, ap->maxopt * sizeof(struct option *));
+                ap->optcap *= 2;
+                tmp = realloc(ap->opts, ap->optcap * sizeof(struct option *));
                 if (!tmp)
                         return -ENOMEM;
                 ap->opts = tmp;
+        }
+
+        return 0;
+}
+
+static int ensure_values_capacity(struct argparser *ap)
+{
+        if (ap->nval >= ap->valcap) {
+                const char **tmp;
+                ap->valcap *= 2;
+                tmp = realloc(ap->vals, ap->valcap * sizeof(const char *));
+                if (!tmp)
+                        return -ENOMEM;
+                ap->vals = tmp;
         }
 
         return 0;
@@ -87,10 +101,8 @@ static int add_option(struct argparser *ap, struct option *opt)
 
 static int store_position_val(struct argparser *ap, const char *val)
 {
-        if (ap->nval >= MAX_VAL) {
-                error(ap, "position value out of %d", MAX_VAL);
-                return -EOVERFLOW;
-        }
+        if (ensure_values_capacity(ap) != 0)
+                return -1;
 
         ap->vals[ap->nval++] = val;
 
@@ -381,9 +393,19 @@ struct argparser *argparser_create(const char *name, const char *version)
         ap->name = name;
         ap->version = version;
 
-        ap->maxopt = MAX_OPT;
-        ap->opts = calloc(ap->maxopt, sizeof(*ap->opts));
+        /* options */
+        ap->optcap = MIN_CAP;
+        ap->opts = calloc(ap->optcap, sizeof(*ap->opts));
         if (!ap->opts) {
+                error(ap, strerror(errno));
+                argparser_free(ap);
+                return NULL;
+        }
+
+        /* values */
+        ap->valcap = MIN_CAP;
+        ap->vals = calloc(ap->valcap, sizeof(*ap->vals));
+        if (!ap->vals) {
                 error(ap, strerror(errno));
                 argparser_free(ap);
                 return NULL;
@@ -406,6 +428,9 @@ void argparser_free(struct argparser *ap)
                         free(ap->opts[i]);
                 }
         }
+
+        if (ap->vals)
+                free(ap->vals);
 
         free(ap);
 }
@@ -562,7 +587,7 @@ uint32_t argparser_count(struct argparser *ap)
 
 const char *argparser_val(struct argparser *ap, uint32_t index)
 {
-        if (index >= MAX_VAL)
+        if (index >= ap->nval)
                 return NULL;
 
         return ap->vals[index];
