@@ -93,7 +93,7 @@ int argparser_addn(struct argparser *ap,
 /* Parsing arguments */
 int argparser_run(struct argparser *ap, int argc, char *argv[]);
 const char *argparser_error(struct argparser *ap);
-struct option *argparser_find(struct argparser *ap, const char *name);
+struct option *argparser_query(struct argparser *ap, const char *name);
 
 /* Get position values */
 uint32_t argparser_count(struct argparser *ap);

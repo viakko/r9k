@@ -567,8 +567,8 @@ const char *argparser_error(struct argparser *ap)
         return ap->error;
 }
 
-/* Find an option with user input */
-struct option *argparser_find(struct argparser *ap, const char *name)
+/* Query an option with user input */
+struct option *argparser_query(struct argparser *ap, const char *name)
 {
         size_t size;
         struct option *opt;
