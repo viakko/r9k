@@ -25,6 +25,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <r9k/string.h>
+#include <r9k/typedefs.h>
 #include <r9k/attributes.h>
 
 #define MIN_CAP 8 /* default */
@@ -527,6 +528,7 @@ int argparser_run(struct argparser *ap, int argc, char *argv[])
 {
         int r;
         char *tok;
+        bool terminator = false;
 
         if (!ap)
                 return -EFAULT;
@@ -534,7 +536,12 @@ int argparser_run(struct argparser *ap, int argc, char *argv[])
         for (int i = 1; i < argc; i++) {
                 tok = argv[i];
 
-                if (tok[0] != '-') {
+                if (tok[0] == '-' && tok[1] == '-' && tok[2] == '\0') {
+                        terminator = true;
+                        continue;
+                }
+
+                if (terminator || tok[0] != '-') {
                         store_position_val(ap, tok);
                         continue;
                 }
