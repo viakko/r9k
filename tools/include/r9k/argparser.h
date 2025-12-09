@@ -28,8 +28,8 @@
 #define opt_concat  (1 << 1) /* -O1 -O2 */
 #define opt_nogroup (1 << 2) /* not allow group */
 
-#define __acb_help __argparser_acb_help
-#define __acb_version __argparser_acb_version
+#define acb_help __argparser_acb_help
+#define acb_version __argparser_acb_version
 
 struct argparser;
 struct option;

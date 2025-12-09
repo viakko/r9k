@@ -86,8 +86,8 @@ int main(int argc, char **argv)
                 exit(1);
         }
 
-        argparser_add0(ap, &opt_help, "h", "help", "show this help message and exit", __acb_help, opt_none);
-        argparser_add0(ap, &opt_version, "version", NULL, "show current version", __acb_version, opt_none);
+        argparser_add0(ap, &opt_help, "h", "help", "show this help message and exit", acb_help, opt_none);
+        argparser_add0(ap, &opt_version, "version", NULL, "show current version", acb_version, opt_none);
         argparser_add0(ap, &opt_chars, "c", NULL, "character count", NULL, opt_none);
         argparser_add0(ap, &opt_lines, "l", NULL, "line count", NULL, opt_none);
         argparser_add1(ap, &opt_files, "f", NULL, "read file contents", NULL, opt_reqval);

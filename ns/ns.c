@@ -60,8 +60,8 @@ int main(int argc, char **argv)
         if (!ap)
                 return -1;
 
-        argparser_add0(ap, &help, "h", "help", "show this help message and exit", __acb_help, opt_none);
-        argparser_add0(ap, &version, "version", NULL, "show version", __acb_version, opt_none);
+        argparser_add0(ap, &help, "h", "help", "show this help message and exit", acb_help, opt_none);
+        argparser_add0(ap, &version, "version", NULL, "show version", acb_version, opt_none);
         argparser_add1(ap, &dns, "dns", NULL, "show resolv DNS address and exit", on_dns, opt_none);
         argparser_add1(ap, &flushdns, "flushdns", NULL, "flush DNS caches", on_flush_dns, opt_none);
 
