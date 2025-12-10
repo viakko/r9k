@@ -1,5 +1,5 @@
 /*
-* SPDX-License-Identifier: MIT
+-* SPDX-License-Identifier: MIT
  * Copyright (c) 2025 viakko
  *
  * argparse - Lightweight command-line argument parsing library
@@ -9,9 +9,7 @@
  * and single-character options can be grouped.
  *
  * The rules:
- *  - If a long option or a short option string includes 'abc', it gets priority
- *    in processing.
- *  - If 'abc' not found in long option, it will be split into single-character
+ *  - If string "abc" not found in short option, it will be split into single-character
  *    options for short option matching.
  *  - Supports argument specified with either spaces or equal signs.
  *  - When arguments are specified using spaces, multiple values are supported.
@@ -66,7 +64,7 @@ void argparser_free(struct argparser *ap);
  * Default no argument option can merge to one option for short name.
  * Short option group only last one option can accept parameter. */
 int argparser_add0(struct argparser *ap,
-                   struct option **pp_option,
+                   struct option **result_slot,
                    const char *shortopt,
                    const char *longopt,
                    const char *tips,
@@ -74,7 +72,7 @@ int argparser_add0(struct argparser *ap,
                    uint32_t flags); /* no argument */
 
 int argparser_add1(struct argparser *ap,
-                   struct option **pp_option,
+                   struct option **result_slot,
                    const char *shortopt,
                    const char *longopt,
                    const char *tips,
@@ -82,7 +80,7 @@ int argparser_add1(struct argparser *ap,
                    uint32_t flags); /* 1 argument */
 
 int argparser_addn(struct argparser *ap,
-                   struct option **pp_option,
+                   struct option **result_slot,
                    const char *shortopt,
                    const char *longopt,
                    int max,

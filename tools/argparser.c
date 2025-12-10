@@ -1,5 +1,5 @@
 /*
-* SPDX-License-Identifier: MIT
+-* SPDX-License-Identifier: MIT
  * Copyright (c) 2025 viakko
  *
  * argparse - Lightweight command-line argument parsing library
@@ -9,9 +9,7 @@
  * and single-character options can be grouped.
  *
  * The rules:
- *  - If a long option or a short option string includes 'abc', it gets priority
- *    in processing.
- *  - If 'abc' not found in long option, it will be split into single-character
+ *  - If string "abc" not found in short option, it will be split into single-character
  *    options for short option matching.
  *  - Supports argument specified with either spaces or equal signs.
  *  - When arguments are specified using spaces, multiple values are supported.
@@ -440,29 +438,29 @@ void argparser_free(struct argparser *ap)
 }
 
 int argparser_add0(struct argparser *ap,
-                   struct option **pp_option,
+                   struct option **result_slot,
                    const char *shortopt,
                    const char *longopt,
                    const char *tips,
                    PFN_argparser_callback cb,
                    uint32_t flags)
 {
-        return argparser_addn(ap, pp_option, shortopt, longopt, 0, tips, cb, flags);
+        return argparser_addn(ap, result_slot, shortopt, longopt, 0, tips, cb, flags);
 }
 
 int argparser_add1(struct argparser *ap,
-                   struct option **pp_option,
+                   struct option **result_slot,
                    const char *shortopt,
                    const char *longopt,
                    const char *tips,
                    PFN_argparser_callback cb,
                    uint32_t flags)
 {
-        return argparser_addn(ap, pp_option, shortopt, longopt, 1, tips, cb, flags);
+        return argparser_addn(ap, result_slot, shortopt, longopt, 1, tips, cb, flags);
 }
 
 int argparser_addn(struct argparser *ap,
-                   struct option **pp_option,
+                   struct option **result_slot,
                    const char *shortopt,
                    const char *longopt,
                    int max,
@@ -484,7 +482,7 @@ int argparser_addn(struct argparser *ap,
                 return -EINVAL;
         }
 
-        *pp_option = NULL;
+        *result_slot = NULL;
 
         opt = calloc(1, sizeof(*opt));
         if (!opt)
@@ -495,7 +493,7 @@ int argparser_addn(struct argparser *ap,
         opt->max = max;
         opt->tips = tips;
         opt->flags = flags;
-        opt->_refs = pp_option;
+        opt->_refs = result_slot;
         opt->_cb = cb;
 
         r = add_option(ap, opt);
