@@ -308,6 +308,12 @@ static int handle_short_assign(struct argparser *ap, char *tok, int *i, char *ar
         char *eqval = NULL;
         _private_option_t *privopt;
 
+        tok = strdup(tok);
+        if (!tok) {
+                error(ap, strerror(errno));
+                return -ENOMEM;
+        }
+
         char *eq = strchr(tok, '=');
         if (eq) {
                 eqval = eq + 1;
@@ -317,15 +323,18 @@ static int handle_short_assign(struct argparser *ap, char *tok, int *i, char *ar
         privopt = lookup_short_str(ap, tok);
         if (privopt != NULL) {
                 int r = try_take_val(ap, privopt, SHORT, tok, eqval, i, argv);
+                free(tok);
                 return r < 0 ? r : 1;
 
         }
 
         if (eqval) {
                 error(ap, "unknown option: -%s", tok);
+                free(tok);
                 return -EINVAL;
         }
 
+        free(tok);
         return 0;
 }
 
@@ -403,6 +412,12 @@ static int handle_long(struct argparser *ap, int *i, char *tok, char *argv[])
         char *eqval = NULL;
         _private_option_t *privopt;
 
+        tok = strdup(tok);
+        if (!tok) {
+                error(ap, strerror(errno));
+                return -ENOMEM;
+        }
+
         char *eq = strchr(tok, '=');
         if (eq) {
                 eqval = eq + 1;
@@ -412,10 +427,12 @@ static int handle_long(struct argparser *ap, int *i, char *tok, char *argv[])
         privopt = lookup_long(ap, tok);
         if (!privopt) {
                 error(ap, "unknown option: --%s", tok);
+                free(tok);
                 return -EINVAL;
         }
 
         r = try_take_val(ap, privopt, LONG, tok, eqval, i, argv);
+        free(tok);
         return r < 0 ? r : 0;
 }
 
