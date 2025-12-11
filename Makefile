@@ -7,7 +7,7 @@ BINDIR    := $(BUILDDIR)/bin
 INCLUDES  := -I../tools/include
 CFLAGS    += $(INCLUDES)
 LINKDIR   := -L$(BUILDDIR)/lib
-SUBDIRS   := tools count ns clip
+SUBDIRS   := tools strl
 
 all: $(SUBDIRS)
 
