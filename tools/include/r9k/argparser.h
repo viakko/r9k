@@ -12,7 +12,7 @@
  *  - If option like "-abc" not found in short option of definitions, it will be
  *    split into single-character options for short option matching.
  *  - Short option value syntax support:
- *    Type                    | Space   | Equals  | Concatenated
+ *    Type                   | Space   | Equals   | Concatenated
  *    -----------------------|---------|----------|-------------
  *    Single-char (-O)       | -O 123  | -O=123   | -O123 (opt_concat)
  *    Multi-char str (-abc)  | -abc 123| -abc=123 | ✗
@@ -33,14 +33,9 @@
  *              exit(0);
  *      }
  *
- *      // set std pointer is NULL
- *      argparser_add0(ap, &std, "std", NULL, "switch standard version", NULL, opt_reqval);
- *
- *      // if user input -std, write back using the _refs pointer.
  *      if (argparser_run(ap, argc, argv) != 0)
  *              die(argparser_error(ap));
  *
- *      // check has input -std
  *      if (std)
  *              printf("std value: %s\n", std->sval);
  *

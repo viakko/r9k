@@ -12,7 +12,7 @@
  *  - If option like "-abc" not found in short option of definitions, it will be
  *    split into single-character options for short option matching.
  *  - Short option value syntax support:
- *    Type                    | Space   | Equals  | Concatenated
+ *    Type                   | Space   | Equals   | Concatenated
  *    -----------------------|---------|----------|-------------
  *    Single-char (-O)       | -O 123  | -O=123   | -O123 (opt_concat)
  *    Multi-char str (-abc)  | -abc 123| -abc=123 | ✗
@@ -60,7 +60,7 @@
 
 #define OPT_PREFIX(is_long) (is_long ? "--" : "-")
 
-typedef struct _private_option // NOLINT(*-reserved-identifier)
+typedef struct private_option
 {
         option_t option;
 
@@ -68,7 +68,7 @@ typedef struct _private_option // NOLINT(*-reserved-identifier)
         uint32_t _capacity;
         option_t** _refs;
         PFN_argparser_callback _cb;
-} _private_option_t; // NOLINT(*-reserved-identifier)
+} private_option_t;
 
 struct argparser
 {
@@ -76,7 +76,7 @@ struct argparser
         const char *version;
 
         /* options */
-        _private_option_t **opts;
+        private_option_t **opts;
         uint32_t nopt;
         uint32_t optcap;
 
@@ -101,9 +101,9 @@ static void error(struct argparser *ap, const char *fmt, ...)
 static int ensure_option_capacity(struct argparser *ap)
 {
         if (ap->nopt >= ap->optcap) {
-                _private_option_t **tmp;
+                private_option_t **tmp;
                 ap->optcap *= 2;
-                tmp = realloc(ap->opts, ap->optcap * sizeof(_private_option_t *));
+                tmp = realloc(ap->opts, ap->optcap * sizeof(private_option_t *));
                 if (!tmp)
                         return -ENOMEM;
                 ap->opts = tmp;
@@ -126,7 +126,7 @@ static int ensure_values_capacity(struct argparser *ap)
         return 0;
 }
 
-static int add_option(struct argparser *ap, _private_option_t *privopt)
+static int add_option(struct argparser *ap, private_option_t *privopt)
 {
         int r;
         if ((r = ensure_option_capacity(ap)) != 0)
@@ -149,7 +149,7 @@ static int store_position_val(struct argparser *ap, const char *val)
 }
 
 static int store_option_val(struct argparser *ap,
-                            _private_option_t *privopt,
+                            private_option_t *privopt,
                             int is_long,
                             char *tok,
                             const char *val)
@@ -193,7 +193,7 @@ static int store_option_val(struct argparser *ap,
  * or max is zero, that return 0 also return options consume value
  * count. */
 static int try_take_val(struct argparser *ap,
-                        _private_option_t *privopt,
+                        private_option_t *privopt,
                         int is_long,
                         char *tok,
                         char *eqval,
@@ -236,9 +236,9 @@ static int try_take_val(struct argparser *ap,
         return (int) privopt->option.count;
 }
 
-static _private_option_t *lookup_short_char(struct argparser *ap, const char shortopt)
+static private_option_t *lookup_short_char(struct argparser *ap, const char shortopt)
 {
-        _private_option_t *privopt;
+        private_option_t *privopt;
 
         for (uint32_t i = 0; i < ap->nopt; i++) {
                 privopt = ap->opts[i];
@@ -251,9 +251,9 @@ static _private_option_t *lookup_short_char(struct argparser *ap, const char sho
         return NULL;
 }
 
-static _private_option_t *lookup_short_str(struct argparser *ap, const char *shortopt)
+static private_option_t *lookup_short_str(struct argparser *ap, const char *shortopt)
 {
-        _private_option_t *privopt;
+        private_option_t *privopt;
 
         for (uint32_t i = 0; i < ap->nopt; i++) {
                 privopt = ap->opts[i];
@@ -264,9 +264,9 @@ static _private_option_t *lookup_short_str(struct argparser *ap, const char *sho
         return NULL;
 }
 
-static _private_option_t *lookup_long(struct argparser *ap, const char *longopt)
+static private_option_t *lookup_long(struct argparser *ap, const char *longopt)
 {
-        _private_option_t *privopt;
+        private_option_t *privopt;
 
         for (uint32_t i = 0; i < ap->nopt; i++) {
                 privopt = ap->opts[i];
@@ -280,7 +280,7 @@ static _private_option_t *lookup_long(struct argparser *ap, const char *longopt)
 static int handle_short_concat(struct argparser *ap, char *tok, int *i, char *argv[]) // NOLINT(*-reserved-identifier)
 {
         char *defval = NULL;
-        _private_option_t *privopt;
+        private_option_t *privopt;
         char tmp[2];
         size_t len;
 
@@ -305,44 +305,49 @@ static int handle_short_concat(struct argparser *ap, char *tok, int *i, char *ar
 
 static int handle_short_assign(struct argparser *ap, char *tok, int *i, char *argv[]) // NOLINT(*-reserved-identifier)
 {
+        int r = 0;
+        bool need_free = false;
         char *eqval = NULL;
-        _private_option_t *privopt;
-
-        tok = strdup(tok);
-        if (!tok) {
-                error(ap, strerror(errno));
-                return -ENOMEM;
-        }
+        private_option_t *privopt;
 
         char *eq = strchr(tok, '=');
         if (eq) {
                 eqval = eq + 1;
                 *eq = '\0';
+                /* alloc */
+                tok = strdup(tok);
+                if (!tok) {
+                        error(ap, strerror(errno));
+                        r = -ENOMEM;
+                        goto out;
+                }
+                need_free = true;
         }
 
         privopt = lookup_short_str(ap, tok);
         if (privopt != NULL) {
-                int r = try_take_val(ap, privopt, SHORT, tok, eqval, i, argv);
-                free(tok);
-                return r < 0 ? r : 1;
-
+                r = try_take_val(ap, privopt, SHORT, tok, eqval, i, argv);
+                r = r < 0 ? r : 1;
+                goto out;
         }
 
         if (eqval) {
                 error(ap, "unknown option: -%s", tok);
-                free(tok);
-                return -EINVAL;
+                r = -EINVAL;
         }
 
-        free(tok);
-        return 0;
+out:
+        if (need_free)
+                free(tok);
+
+        return r;
 }
 
 static int handle_short_group(struct argparser *ap, char *tok, int *i, char *argv[]) // NOLINT(*-reserved-identifier)
 {
         int has_val = 0;
         char has_val_opt = 0;
-        _private_option_t *privopt;
+        private_option_t *privopt;
         char tmp[2];
 
         for (int k = 0; tok[k]; k++) {
@@ -408,32 +413,40 @@ static int handle_short(struct argparser *ap, int *i, char *tok, char *argv[])
 
 static int handle_long(struct argparser *ap, int *i, char *tok, char *argv[])
 {
-        int r;
+        int r = 0;
+        bool need_free = false;
         char *eqval = NULL;
-        _private_option_t *privopt;
-
-        tok = strdup(tok);
-        if (!tok) {
-                error(ap, strerror(errno));
-                return -ENOMEM;
-        }
+        private_option_t *privopt;
 
         char *eq = strchr(tok, '=');
         if (eq) {
                 eqval = eq + 1;
                 *eq = '\0';
+                /* alloc */
+                tok = strdup(tok);
+                if (!tok) {
+                        error(ap, strerror(errno));
+                        r = -ENOMEM;
+                        goto out;
+                }
+                need_free = true;
         }
 
         privopt = lookup_long(ap, tok);
         if (!privopt) {
                 error(ap, "unknown option: --%s", tok);
-                free(tok);
-                return -EINVAL;
+                r = -EINVAL;
+                goto out;
         }
 
         r = try_take_val(ap, privopt, LONG, tok, eqval, i, argv);
-        free(tok);
-        return r < 0 ? r : 0;
+        r = r < 0 ? r : 0;
+
+out:
+        if (need_free)
+                free(tok);
+
+        return r;
 }
 
 int argparser_acb_help(struct argparser *ap, option_t *opt)
@@ -489,7 +502,7 @@ void argparser_free(struct argparser *ap)
 
         if (ap->opts) {
                 for (uint32_t i = 0; i < ap->nopt; i++) {
-                        _private_option_t *privopt = ap->opts[i];
+                        private_option_t *privopt = ap->opts[i];
                         if (privopt->option.vals != NULL)
                                 free(privopt->option.vals);
 
@@ -537,7 +550,7 @@ int argparser_addn(struct argparser *ap,
                    uint32_t flags)
 {
         int r;
-        _private_option_t *privopt;
+        private_option_t *privopt;
 
         /* check exists */
         if (longopt && lookup_long(ap, longopt)) {
@@ -580,7 +593,7 @@ int argparser_addn(struct argparser *ap,
 static int execacb(struct argparser *ap)
 {
         int r;
-        _private_option_t *privopt;
+        private_option_t *privopt;
 
         for (uint32_t i = 0; i < ap->nopt; i++) {
                 privopt = ap->opts[i];
@@ -648,7 +661,7 @@ const char *argparser_error(struct argparser *ap)
 option_t *argparser_has(struct argparser *ap, const char *name)
 {
         size_t size;
-        _private_option_t *privopt;
+        private_option_t *privopt;
 
         size = strlen(name);
 
