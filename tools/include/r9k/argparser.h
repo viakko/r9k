@@ -12,11 +12,13 @@
  *  - If option like "-abc" not found in short option of definitions, it will be
  *    split into single-character options for short option matching.
  *  - Short option value syntax support:
+ *    -----------------------------------------------------------------
  *    Type                   | Space   | Equals   | Concatenated
- *    -----------------------|---------|----------|-------------
- *    Single-char (-O)       | -O 123  | -O=123   | -O123 (opt_concat)
+ *    -----------------------|---------|----------|--------------------
+ *    Single-char (-O)       | -O 123  | -O=123   | -O123 (OPT_CONCAT)
  *    Multi-char str (-abc)  | -abc 123| -abc=123 | ✗
  *    Option group (-xyz)    | -xyz 123| ✗        | ✗
+ *    -----------------------------------------------------------------
  *  - Supports multiple values via space-separation or repeated options.
  *  - Support a single-character short option to group with other single-character
  *    short option.
@@ -49,13 +51,12 @@
 
 #include <stdint.h>
 
-#define opt_none    (0)
-#define opt_reqval  (1 << 0) /* required value */
-#define opt_concat  (1 << 1) /* -O1 -O2 */
-#define opt_nogroup (1 << 2) /* not allow a group */
+#define OPT_REQUIRED (1 << 0) /* required value */
+#define OPT_CONCAT   (1 << 1) /* -O1 -O2 */
+#define OPT_NOGRP    (1 << 2) /* not allow a group */
 
-#define acb_help argparser_acb_help
-#define acb_version argparser_acb_version
+#define ACB_HELP argparser_acb_help
+#define ACB_VERSION argparser_acb_version
 
 typedef struct argparser argparser_t;
 typedef struct option option_t;

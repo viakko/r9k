@@ -50,11 +50,11 @@ int main(int argc, char **argv)
                 return -1;
         }
 
-        argparser_add0(ap, &opt_help, "h", "help", "show this help message and exit", acb_help, opt_none);
-        argparser_add0(ap, &opt_version, "version", NULL, "show version and exit", acb_version, opt_none);
-        argparser_add0(ap, &opt_daemon, "d", NULL, "copy and not print content", NULL, opt_none);
-        argparser_add0(ap, &opt_quiet, NULL, "quiet", "copy and not print content", NULL, opt_none);
-        argparser_add0(ap, &opt_print, NULL, "print", "print clipboard content to print content", NULL, opt_none);
+        argparser_add0(ap, &opt_help, "h", "help", "show this help message and exit", ACB_HELP, 0);
+        argparser_add0(ap, &opt_version, "version", NULL, "show version and exit", ACB_VERSION, 0);
+        argparser_add0(ap, &opt_daemon, "d", NULL, "copy and not print content", NULL, 0);
+        argparser_add0(ap, &opt_quiet, NULL, "quiet", "copy and not print content", NULL, 0);
+        argparser_add0(ap, &opt_print, NULL, "print", "print clipboard content to print content", NULL, 0);
 
         if (argparser_run(ap, argc, argv) != 0) {
                 fprintf(stderr, "%s\n", argparser_error(ap));

@@ -12,11 +12,13 @@
  *  - If option like "-abc" not found in short option of definitions, it will be
  *    split into single-character options for short option matching.
  *  - Short option value syntax support:
+ *    -----------------------------------------------------------------
  *    Type                   | Space   | Equals   | Concatenated
- *    -----------------------|---------|----------|-------------
- *    Single-char (-O)       | -O 123  | -O=123   | -O123 (opt_concat)
+ *    -----------------------|---------|----------|--------------------
+ *    Single-char (-O)       | -O 123  | -O=123   | -O123 (OPT_CONCAT)
  *    Multi-char str (-abc)  | -abc 123| -abc=123 | ✗
  *    Option group (-xyz)    | -xyz 123| ✗        | ✗
+ *    -----------------------------------------------------------------
  *  - Supports multiple values via space-separation or repeated options.
  *  - Support a single-character short option to group with other single-character
  *    short option.
@@ -204,7 +206,7 @@ static int try_take_val(struct argparser *ap,
                 *privopt->_refs = &privopt->option;
 
         if (privopt->option.max <= 0) {
-                if (privopt->option.flags & opt_reqval) {
+                if (privopt->option.flags & OPT_REQUIRED) {
                         error(ap, "option %s%s flag need requires a value, but max capacity is zero",
                               OPT_PREFIX(is_long), tok);
                         return -EINVAL;
@@ -222,7 +224,7 @@ static int try_take_val(struct argparser *ap,
                 char *val = argv[*i + 1];
 
                 if (!val || val[0] == '-') {
-                        if ((privopt->option.flags & opt_reqval) && privopt->option.count == 0) {
+                        if ((privopt->option.flags & OPT_REQUIRED) && privopt->option.count == 0) {
                                 error(ap, "option %s%s missing required argument", OPT_PREFIX(is_long), tok);
                                 return -EINVAL;
                         }
@@ -289,7 +291,7 @@ static int handle_short_concat(struct argparser *ap, char *tok, int *i, char *ar
         tmp[0] = tok[0];
         tmp[1] = '\0';
         privopt = lookup_short_str(ap, tmp);
-        if (privopt != NULL && (privopt->option.flags & opt_concat)) {
+        if (privopt != NULL && (privopt->option.flags & OPT_CONCAT)) {
                 if (len > 1)
                         defval = tok + 1;
 
@@ -357,12 +359,12 @@ static int handle_short_group(struct argparser *ap, char *tok, int *i, char *arg
                         return -EINVAL;
                 }
 
-                if (privopt->option.flags & opt_concat) {
+                if (privopt->option.flags & OPT_CONCAT) {
                         error(ap, "invalid option -%c cannot be in a group", tok[k]);
                         return -EINVAL;
                 }
 
-                if (privopt->option.flags & opt_nogroup) {
+                if (privopt->option.flags & OPT_NOGRP) {
                         error(ap, "option -%c cannot be used as a group", tok[k]);
                         return -EINVAL;
                 }
@@ -392,7 +394,7 @@ static int handle_short(struct argparser *ap, int *i, char *tok, char *argv[])
 {
         int r;
 
-        /* check opt_concat flag */
+        /* check OPT_CONCAT flag */
         r = handle_short_concat(ap, tok, i, argv);
         if (r > 0)
                 return 0;
@@ -740,7 +742,7 @@ const char *argparser_help(struct argparser *ap)
                         }
                 }
 
-                if (opt->flags & opt_reqval)
+                if (opt->flags & OPT_REQUIRED)
                         APPEND(" <value>");
 
                 if (opt->tips)
