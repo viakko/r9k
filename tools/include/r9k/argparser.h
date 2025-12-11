@@ -68,7 +68,6 @@ struct option
 {
         const char*  shortopt;
         const char*  longopt;
-        uint8_t      max;
         const char*  tips;
         const char*  sval;
         uint32_t     nval;

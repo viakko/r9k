@@ -70,6 +70,7 @@ typedef struct
         uint32_t _valcap;
         struct option** _refs; /* if an input option using _refs writes back the pointer. */
         PFN_argparser_callback _cb;
+        uint32_t _maxval;
         uint32_t _flags;
 } internal_option_t;
 
@@ -152,13 +153,13 @@ static int store_position_val(struct argparser *ap, const char *val)
 }
 
 static int store_option_val(struct argparser *ap,
-                            internal_option_t *opt, 
+                            internal_option_t *opt,
                             int is_long,
                             char *tok,
                             const char *val)
 {
-        if (opt->pub.nval > opt->pub.max) {
-                error(ap, "%s%s option value out of %d", OPT_PREFIX(is_long), tok, opt->pub.max);
+        if (opt->pub.nval > opt->_maxval) {
+                error(ap, "%s%s option value out of %d", OPT_PREFIX(is_long), tok, opt->_maxval);
                 return -EOVERFLOW;
         }
 
@@ -206,7 +207,7 @@ static int try_take_val(struct argparser *ap,
         if (opt->_refs)
                 *opt->_refs = &opt->pub;
 
-        if (opt->pub.max <= 0) {
+        if (opt->_maxval == 0) {
                 if (opt->_flags & OPT_REQUIRED) {
                         error(ap, "option %s%s flag need requires a value, but max capacity is zero",
                               OPT_PREFIX(is_long), tok);
@@ -221,7 +222,7 @@ static int try_take_val(struct argparser *ap,
                 return (int) opt->pub.nval;
         }
 
-        while (opt->pub.nval < opt->pub.max) {
+        while (opt->pub.nval < opt->_maxval) {
                 char *val = argv[*i + 1];
 
                 if (!val || val[0] == '-') {
@@ -356,7 +357,7 @@ static int handle_short_group(struct argparser *ap, char *tok, int *i, char *arg
                         return -EINVAL;
                 }
 
-                if (has_val && opt->pub.max > 0) {
+                if (has_val && opt->_maxval > 0) {
                         error(ap, "option -%c does not accept a value, cause option -%c already acceped", tok[k], has_val_opt);
                         return -EINVAL;
                 }
@@ -544,8 +545,8 @@ int argparser_addn(struct argparser *ap,
 
         opt->pub.shortopt = shortopt;
         opt->pub.longopt = longopt;
-        opt->pub.max = max;
         opt->pub.tips = tips;
+        opt->_maxval = max;
         opt->_flags = flags;
         opt->_refs = result_slot;
         opt->_cb = cb;
