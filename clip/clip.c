@@ -48,7 +48,7 @@ void clip_watch(PFN_clip_watch watch)
         while (1) {
                 char *cur = clip_read();
 
-                if (cur && !isblank(cur) && (!prev || strcmp(cur, prev) != 0)) {
+                if (cur && !strblank(cur) && (!prev || strcmp(cur, prev) != 0)) {
                         watch(cur);
                         free(prev);
                         prev = cur;
