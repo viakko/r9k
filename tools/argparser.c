@@ -1,50 +1,6 @@
 /*
 -* SPDX-License-Identifier: MIT
  * Copyright (c) 2025 viakko
- *
- * argparse - Lightweight command-line argument parsing library
- *
- * Provides multi-sytle command parsing with support for both
- * short and long options. Short option support string type,
- * and single-character options can be grouped.
- *
- * The rules:
- *  - If option like "-abc" not found in short option of definitions, it will be
- *    split into single-character options for short option matching.
- *  - Short option value syntax support:
- *    -----------------------------------------------------------------
- *    Type                   | Space   | Equals   | Concatenated
- *    -----------------------|---------|----------|--------------------
- *    Single-char (-O)       | -O 123  | -O=123   | -O123 (OPT_CONCAT)
- *    Multi-char str (-abc)  | -abc 123| -abc=123 | ✗
- *    Option group (-xyz)    | -xyz 123| ✗        | ✗
- *    -----------------------------------------------------------------
- *  - Supports multiple values via space-separation or repeated options.
- *  - Support a single-character short option to group with other single-character
- *    short option.
- *
- * Code example:
- *
- * int main(int argc, char *argv[])
- * {
- *      struct argparser ap;
- *      struct option    std;
- *
- *      ap = argparser_create("gcc", "1.0");
- *      if (!ap) {
- *              exit(0);
- *      }
- *
- *      if (argparser_run(ap, argc, argv) != 0)
- *              die(argparser_error(ap));
- *
- *      if (std)
- *              printf("std value: %s\n", std->sval);
- *
- *      return 0;
- * }
- *
- * NOTE: sval is a first value from vals[0], vals is values array.
  */
 #include <r9k/argparser.h>
 #include <stdlib.h>

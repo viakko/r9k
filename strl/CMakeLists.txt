@@ -1,3 +1,3 @@
-set(MODULE_NAME strlen)
-add_executable(${MODULE_NAME} strl.c charc.c)
+set(MODULE_NAME strl)
+add_executable(${MODULE_NAME} strl.c)
 target_link_libraries(${MODULE_NAME} PRIVATE tools)

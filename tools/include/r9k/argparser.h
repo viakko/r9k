@@ -27,8 +27,8 @@
  *
  * int main(int argc, char *argv[])
  * {
- *      struct argparser ap;
- *      struct option    std;
+ *      struct argparser *ap;
+ *      struct option    *std;
  *
  *      ap = argparser_create("gcc", "1.0");
  *      if (!ap) {
@@ -44,7 +44,11 @@
  *      return 0;
  * }
  *
- * NOTE: sval is a first value from vals[0], vals is values array.
+ * NOTE: You don't need to initialize the 'std' option pointer to NULL.
+ *       When calling the add function, the libraray automatically sets the
+ *       pointer to NULL via the result slot.
+ *       If the user provides a corresponding option, the libraray will write
+ *       the parsed value back to the pointer through the slot.
  */
 #ifndef ARGPARSER_H_
 #define ARGPARSER_H_
