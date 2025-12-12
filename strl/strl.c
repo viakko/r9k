@@ -69,7 +69,7 @@ static void *stream_count_worker(void *_arg)
                 return NULL;
         }
 
-        arg->ret = count_stream(fp, arg->ischr, &arg->err);
+        arg->ret = stream_count(fp, arg->ischr, &arg->err);
 
         fclose(fp);
         return NULL;
