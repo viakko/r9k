@@ -16,7 +16,7 @@
 
 struct worker_arg_t
 {
-        const char *filename;
+        const char *path;
         struct option *ischr;
         ssize_t ret;
         int err;
@@ -36,101 +36,82 @@ static size_t utf8len(const char *str)
         return len;
 }
 
-static size_t stdin_count(struct option *ischr)
+static ssize_t count_stream(FILE *fptr, struct option *ischr, int *err)
 {
         char buf[BUFSIZE + 1];
+        ssize_t total = 0;
         ssize_t n;
-        size_t count = 0;
 
-        while (1) {
-                n = read(STDIN_FILENO, buf, BUFSIZE);
-                if (n <= 0)
-                        break;
-                buf[n] = '\0';
-                count += ischr ? utf8len(buf) : strlen(buf);
+        while ((n = fread(buf, 1, BUFSIZE, fptr)) > 0) {
+                if (ischr) {
+                        buf[n] = '\0';
+                        total += utf8len(buf);
+                } else {
+                        total += n;
+                }
         }
 
-        return count;
-}
-
-static ssize_t file_count(const char *filename, struct option *ischr, int *err)
-{
-        char buf[BUFSIZE + 1];
-        size_t total = 0;
-        ssize_t n;
-
-        FILE *fp = fopen(filename, "r");
-        if (!fp) {
+        if (ferror(fptr)) {
                 *err = errno;
                 return -1;
         }
 
-        while ((n = fread(buf, 1, BUFSIZE, fp)) > 0) {
-                if (n <= 0)
-                        break;
-                buf[n] = '\0';
-                total += ischr ? utf8len(buf) : strlen(buf);
-        }
-
-        if (ferror(fp)) {
-                fclose(fp);
-                *err = errno;
-                return -1;
-        }
-
-        fclose(fp);
-        return (ssize_t) total;
+        return total;
 }
 
-static void *file_count_worker(void *_arg)
+static void *stream_count_worker(void *_arg)
 {
         struct worker_arg_t *arg = _arg;
-        arg->ret = file_count(arg->filename, arg->ischr, &arg->err);
+
+        FILE* fp = fopen(arg->path, "r");
+        if (!fp) {
+                arg->err = errno;
+                return NULL;
+        }
+
+        arg->ret = count_stream(fp, arg->ischr, &arg->err);
+
+        fclose(fp);
         return NULL;
 }
 
-static void process_files(struct option *files, struct option *ischr)
+static void process_stream(struct option *files, struct option *ischr)
 {
-        if (!files)
+        size_t total = 0;
+
+        /* read stdin */
+        if (files == NULL) {
+                int err = 0;
+                total = count_stream(stdin, ischr, &err);
+                if (total <= 0)
+                        die("ERROR read in standard input: %s\n", strerror(err));
+                printf("%ld\n", total);
                 return;
+        }
 
         pthread_t threads[files->nval];
         struct worker_arg_t args[files->nval];
-        size_t total = 0;
 
-        /* create pthreads */
+        /* create thread */
         for (uint32_t i = 0; i < files->nval; i++) {
-                args[i].filename = files->vals[i];
+                args[i].path = files->vals[i];
                 args[i].ischr = ischr;
                 args[i].ret = 0;
-                pthread_create(&threads[i], NULL, file_count_worker, &args[i]);
+                args[i].err = 0;
+                pthread_create(&threads[i], NULL, stream_count_worker, &args[i]);
         }
 
-        /* join threads */
+        /* run thread */
         for (uint32_t i = 0; i < files->nval; i++) {
                 pthread_join(threads[i], NULL);
-
-                if (args[i].ret == -1)
-                        die("ERROR read file: %s\n", strerror(args[i].err));
-
-                printf("%s %zu\n", args[i].filename, args[i].ret);
+                if (args[i].ret < 0)
+                        die("ERROR read in file %s: %s\n", args[i].path, strerror(args[i].err));
+                printf("  %ld %s\n", args[i].ret, args[i].path);
                 total += args[i].ret;
         }
 
-        printf("total %zu\n", total);
-
-        exit(0);
-}
-
-static void process_normal(struct argparser *ap, struct option *ischr)
-{
-        if (argparser_count(ap) > 0) {
-                const char *buf = argparser_val(ap, 0);
-                printf("%zu\n", ischr ? utf8len(buf) : strlen(buf));
-        } else {
-                printf("%zu\n", stdin_count(ischr));
-        }
-        exit(0);
+        if (files->nval > 1)
+                printf("  %ld total\n", total);
 }
 
 int main(int argc, char* argv[])
@@ -153,8 +134,12 @@ int main(int argc, char* argv[])
         if (argparser_run(ap, argc, argv) != 0)
                 die("%s", argparser_error(ap));
 
-        process_files(files, ischr);
-        process_normal(ap, ischr);
+        if (files || argparser_count(ap) == 0) {
+                process_stream(files, ischr);
+        } else {
+                const char *str = argparser_val(ap, 0);
+                printf("  %ld\n", ischr ? utf8len(str) : strlen(str));
+        }
 
         argparser_free(ap);
 
