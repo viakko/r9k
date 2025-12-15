@@ -137,14 +137,12 @@ static void process_stream(struct option *f,
 int main(int argc, char* argv[])
 {
         struct argparser *ap;
-        struct option *h, *v, *c, *l, *f;
+        struct option *c, *l, *f;
 
         ap = argparser_create("strl", "1.0.0");
         if (!ap)
                 die("argparser initialize failed");
 
-        argparser_add0(ap, &h, "h", "help", "show this help message.", ACB_EXIT_HELP, 0);
-        argparser_add0(ap, &v, "version", NULL, "show current version.", ACB_EXIT_VERSION, 0);
         argparser_add0(ap, &c, "c", NULL, "count characters by unicode.", NULL, 0);
         argparser_add0(ap, &l, "l", NULL, "count line.", NULL, 0);
         argparser_addn(ap, &f, "f", NULL, 128, "count files.", NULL, O_REQUIRED);

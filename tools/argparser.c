@@ -52,6 +52,10 @@ struct argparser
         char error[MAX_MSG];
         char help[MAX_MSG];
 
+        /* builtin */
+        struct option *opt_h;
+        struct option *opt_v;
+
         /* id */
         uint32_t _mulid;
 };
@@ -449,7 +453,7 @@ int _argparser_builtin_callback_version(struct argparser *ap, struct option *op_
         exit(0);
 }
 
-struct argparser *argparser_create(const char *name, const char *version)
+struct argparser *argparser_create_raw(const char *name, const char *version)
 {
         struct argparser *ap;
 
@@ -479,6 +483,20 @@ struct argparser *argparser_create(const char *name, const char *version)
         }
 
         ap->_mulid = 1;
+
+        return ap;
+}
+
+struct argparser *argparser_create(const char *name, const char *version)
+{
+        struct argparser *ap;
+
+        ap = argparser_create_raw(name, version);
+        if (!ap)
+                return NULL;
+
+        argparser_add0(ap, &ap->opt_h, "h", "help", "show this help message.", ACB_EXIT_HELP, 0);
+        argparser_add0(ap, &ap->opt_v, "version", NULL, "show current version.", ACB_EXIT_VERSION, 0);
 
         return ap;
 }

@@ -82,7 +82,8 @@ int _argparser_builtin_callback_help(struct argparser *ap, struct option *opt);
 int _argparser_builtin_callback_version(struct argparser *ap, struct option *opt);
 
 /* If a result doesn't equal to 0 that mean error. */
-struct argparser *argparser_create(const char *name, const char *version);
+struct argparser *argparser_create_raw(const char *name, const char *version); /* no builtin options. */
+struct argparser *argparser_create(const char *name, const char *version); /* builtin help and version options */
 void argparser_free(struct argparser *ap);
 
 /* Add options to argparser.
