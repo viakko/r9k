@@ -5,7 +5,6 @@
 #include <r9k/argparser.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
