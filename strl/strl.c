@@ -126,12 +126,12 @@ static void process_stream(struct option *f,
                 pthread_join(threads[i], NULL);
                 if (args[i].ret < 0)
                         die("ERROR read in file %s: %s\n", args[i].path, strerror(args[i].err));
-                printf("  %ld %s\n", args[i].ret, args[i].path);
+                printf("%10ld %s\n", args[i].ret, args[i].path);
                 total += args[i].ret;
         }
 
         if (f->nval > 1)
-                printf("  %ld total\n", total);
+                printf("%10ld total\n", total);
 }
 
 int main(int argc, char* argv[])
@@ -157,11 +157,11 @@ int main(int argc, char* argv[])
         } else {
                 const char *str = argparser_val(ap, 0);
                 if (c) {
-                        printf("  %ld\n", utf8len(str));
+                        printf("%10ld\n", utf8len(str));
                 } else if (l) {
-                        printf("  %ld\n", line_count(str, strlen(str)));
+                        printf("%10ld\n", line_count(str, strlen(str)));
                 } else {
-                        printf("  %ld\n", strlen(str));
+                        printf("%10ld\n", strlen(str));
                 }
         }
 
