@@ -15,6 +15,8 @@ $(LIB): $(OBJS)
 
 $(OBJDIR)/%.o: %.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
+
+-include $(OBJS:.o=.d)
 
 .PHONY: all clean

@@ -53,8 +53,13 @@ struct argparser
 static void error(struct argparser *ap, const char *fmt, ...)
 {
         va_list va;
+        size_t n;
+
+        n = snprintf(ap->error, sizeof(ap->error),
+                     "%s: ", ap->name ? ap->name : "(null)");
+
         va_start(va, fmt);
-        vsnprintf(ap->error, sizeof(ap->error), fmt, va);
+        vsnprintf(ap->error + n, sizeof(ap->error) - n, fmt, va);
         va_end(va);
 }
 

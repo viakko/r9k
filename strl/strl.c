@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
         argparser_addn(ap, &files, "f", NULL, 128, "count files.", NULL, OPT_REQUIRED);
 
         if (argparser_run(ap, argc, argv) != 0)
-                die("%s", argparser_error(ap));
+                die("%s\n", argparser_error(ap));
 
         if (files || argparser_count(ap) == 0) {
                 process_stream(files, ischr);
