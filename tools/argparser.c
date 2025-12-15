@@ -365,7 +365,7 @@ static int handle_short_group(struct argparser *ap, char *tok, int *i, char *arg
                         return -EINVAL;
                 }
 
-                if (op_hdr->_flags & O_NOGRP) {
+                if (op_hdr->_flags & O_NOGROUP) {
                         error(ap, "option -%c cannot be used as a group", tok[k]);
                         return -EINVAL;
                 }

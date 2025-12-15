@@ -55,9 +55,9 @@
 
 #include <stdint.h>
 
-#define O_REQUIRED (1 << 0) /* required value */
-#define O_CONCAT   (1 << 1) /* -O1 -O2 */
-#define O_NOGROUP  (1 << 2) /* not allow a group */
+#define O_REQUIRED (1 << 1) /* required value */
+#define O_CONCAT   (1 << 2) /* allow arguments like: -O1 -O2 */
+#define O_NOGROUP  (1 << 3) /* not allow a group */
 
 #define ACB_EXIT_HELP _argparser_builtin_callback_help
 #define ACB_EXIT_VERSION _argparser_builtin_callback_version
