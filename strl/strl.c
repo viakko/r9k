@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
         argparser_add0(ap, &opt_version, "version", NULL, "show current version.", ACB_EXIT_VERSION, 0);
         argparser_add0(ap, &opt_c, "c", NULL, "count characters by unicode.", NULL, 0);
         argparser_add0(ap, &opt_l, "l", NULL, "count line.", NULL, 0);
-        argparser_addn(ap, &opt_f, "f", NULL, 128, "count files.", NULL, OPT_REQUIRED);
+        argparser_addn(ap, &opt_f, "f", NULL, 128, "count files.", NULL, O_REQUIRED);
 
         argparser_mutual_exclude(ap, &opt_c, &opt_l);
 

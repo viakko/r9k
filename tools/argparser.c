@@ -16,7 +16,7 @@
 #define LONG    1
 #define SHORT   0
 
-#define OPT_PREFIX(is_long) (is_long ? "--" : "-")
+#define O_PREFIX(is_long) (is_long ? "--" : "-")
 
 struct builtin_option
 {
@@ -129,7 +129,7 @@ static int store_option_val(struct argparser *ap,
                             const char *val)
 {
         if (opt->pub.nval > opt->_maxval) {
-                error(ap, "%s%s option value out of %d", OPT_PREFIX(is_long), tok, opt->_maxval);
+                error(ap, "%s%s option value out of %d", O_PREFIX(is_long), tok, opt->_maxval);
                 return -EOVERFLOW;
         }
 
@@ -199,7 +199,7 @@ static int try_take_val(struct argparser *ap,
                 struct builtin_option *ent = is_mutual(ap, opt);
                 if (ent) {
                        error(ap, "%s%s conflicts with option %s%s",
-                               OPT_PREFIX(is_long), tok,
+                               O_PREFIX(is_long), tok,
                                ent->pub.shortopt ? "-" : "--",
                                ent->pub.shortopt ? ent->pub.shortopt : ent->pub.longopt);
                         return -EINVAL;
@@ -208,9 +208,9 @@ static int try_take_val(struct argparser *ap,
         }
 
         if (opt->_maxval == 0) {
-                if (opt->_flags & OPT_REQUIRED) {
+                if (opt->_flags & O_REQUIRED) {
                         error(ap, "option %s%s flag need requires a value, but max capacity is zero",
-                              OPT_PREFIX(is_long), tok);
+                              O_PREFIX(is_long), tok);
                         return -EINVAL;
                 }
                 return 0;
@@ -226,8 +226,8 @@ static int try_take_val(struct argparser *ap,
                 char *val = argv[*i + 1];
 
                 if (!val || val[0] == '-') {
-                        if ((opt->_flags & OPT_REQUIRED) && opt->pub.nval == 0) {
-                                error(ap, "option %s%s missing required argument", OPT_PREFIX(is_long), tok);
+                        if ((opt->_flags & O_REQUIRED) && opt->pub.nval == 0) {
+                                error(ap, "option %s%s missing required argument", O_PREFIX(is_long), tok);
                                 return -EINVAL;
                         }
                         break;
@@ -303,7 +303,7 @@ static int handle_short_concat(struct argparser *ap, char *tok, int *i, char *ar
         tmp[0] = tok[0];
         tmp[1] = '\0';
         opt = lookup_short_str(ap, tmp);
-        if (opt != NULL && (opt->_flags & OPT_CONCAT)) {
+        if (opt != NULL && (opt->_flags & O_CONCAT)) {
                 if (len > 1)
                         defval = tok + 1;
 
@@ -357,12 +357,12 @@ static int handle_short_group(struct argparser *ap, char *tok, int *i, char *arg
                         return -EINVAL;
                 }
 
-                if (opt->_flags & OPT_CONCAT) {
+                if (opt->_flags & O_CONCAT) {
                         error(ap, "invalid option -%c cannot be in a group", tok[k]);
                         return -EINVAL;
                 }
 
-                if (opt->_flags & OPT_NOGRP) {
+                if (opt->_flags & O_NOGRP) {
                         error(ap, "option -%c cannot be used as a group", tok[k]);
                         return -EINVAL;
                 }
@@ -392,7 +392,7 @@ static int handle_short(struct argparser *ap, int *i, char *tok, char *argv[])
 {
         int r;
 
-        /* check OPT_CONCAT flag */
+        /* check O_CONCAT flag */
         r = handle_short_concat(ap, tok, i, argv);
         if (r > 0)
                 return 0;
@@ -739,7 +739,7 @@ const char *argparser_help(struct argparser *ap)
                         }
                 }
 
-                if (opt->_flags & OPT_REQUIRED)
+                if (opt->_flags & O_REQUIRED)
                         APPEND(" <value>");
 
                 if (opt->pub.tips)

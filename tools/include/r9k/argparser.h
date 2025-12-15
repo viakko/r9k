@@ -15,7 +15,7 @@
  *    -----------------------------------------------------------------
  *    Type                   | Space   | Equals   | Concatenated
  *    -----------------------|---------|----------|--------------------
- *    Single-char (-O)       | -O 123  | -O=123   | -O123 (OPT_CONCAT)
+ *    Single-char (-O)       | -O 123  | -O=123   | -O123 (O_CONCAT)
  *    Multi-char str (-abc)  | -abc 123| -abc=123 | ✗
  *    Option group (-xyz)    | -xyz 123| ✗        | ✗
  *    -----------------------------------------------------------------
@@ -55,9 +55,9 @@
 
 #include <stdint.h>
 
-#define OPT_REQUIRED (1 << 0) /* required value */
-#define OPT_CONCAT   (1 << 1) /* -O1 -O2 */
-#define OPT_NOGRP    (1 << 2) /* not allow a group */
+#define O_REQUIRED (1 << 0) /* required value */
+#define O_CONCAT   (1 << 1) /* -O1 -O2 */
+#define O_NOGRP    (1 << 2) /* not allow a group */
 
 #define ACB_EXIT_HELP _argparser_builtin_callback_help
 #define ACB_EXIT_VERSION _argparser_builtin_callback_version
