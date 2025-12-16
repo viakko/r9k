@@ -12,6 +12,8 @@
 #include <r9k/panic.h>
 #include <r9k/compiler_attrs.h>
 
+static struct option *no_pretty;
+
 static int hex_val(char c)
 {
         if ('0' <= c && c <= '9') return c - '0';
@@ -38,6 +40,8 @@ static int is_unreserved(unsigned char c)
 
 static int url_query(struct argparser *ap, struct option *o_qs)
 {
+        __attr_ignore(ap);
+
         const char *q;
         const char *amp;
 
@@ -45,7 +49,7 @@ static int url_query(struct argparser *ap, struct option *o_qs)
 
         q++; /* skip '?' */
 
-        if (!argparser_has(ap, "no-title"))
+        if (!no_pretty)
                 printf("=== QUERY ===\n");
 
         while (*q) {
@@ -53,7 +57,9 @@ static int url_query(struct argparser *ap, struct option *o_qs)
                 if (!amp)
                         break;
 
-                putchar(' ');
+                if (!no_pretty)
+                        putchar(' ');
+
                 fwrite(q, 1, amp - q, stdout);
                 putchar('\n');
 
@@ -90,7 +96,7 @@ static int url_encode(struct argparser *ap, struct option *o_encode)
 
         *q = '\0';
 
-        if (!argparser_has(ap, "no-title"))
+        if (!no_pretty)
                 printf("=== ENCODING ===\n");
         printf("%s\n", out);
 
@@ -101,6 +107,8 @@ static int url_encode(struct argparser *ap, struct option *o_encode)
 
 static int url_decode(struct argparser *ap, struct option *o_decode)
 {
+        __attr_ignore(ap);
+
         char *out, *q;
         const char *p, *s;
 
@@ -123,7 +131,7 @@ static int url_decode(struct argparser *ap, struct option *o_decode)
         }
         *q = '\0';
 
-        if (!argparser_has(ap, "no-title"))
+        if (!no_pretty)
                 printf("=== DECODING ===\n");
         printf("%s\n", out);
 
@@ -138,7 +146,6 @@ int main(int argc, char* argv[])
         struct option *qs;
         struct option *encode;
         struct option *decode;
-        struct option *no_title;
 
         ap = argparser_create("url", "1.0");
         PANIC_IF(!ap, "argparser initialize failed");
@@ -146,7 +153,7 @@ int main(int argc, char* argv[])
         argparser_add1(ap, &qs, "qs", NULL, "parse parameters in url", url_query, O_REQUIRED);
         argparser_add1(ap, &encode, NULL, "encode", "url encoding", url_encode, O_REQUIRED);
         argparser_add1(ap, &decode, NULL, "decode", "url decoding", url_decode, O_REQUIRED);
-        argparser_add0(ap, &no_title, NULL, "no-title", "do not show option title", NULL, 0);
+        argparser_add0(ap, &no_pretty, NULL, "no-pretty", "do not show option title", NULL, 0);
 
         if (argparser_run(ap, argc, argv) != 0)
                 PANIC("%s\n", argparser_error(ap));
