@@ -19,12 +19,3 @@ void panic(const char *fmt, ...)
         vpanic(fmt, va);
         va_end(va);
 }
-
-void panic_if(int cond, const char *fmt, ...)
-{
-        va_list va;
-        va_start(va, fmt);
-        if (cond)
-                vpanic(fmt, va);
-        va_end(va);
-}

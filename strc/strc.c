@@ -96,13 +96,13 @@ static void process_stream(struct option *f,
                            struct option *m,
                            struct option *l)
 {
-        size_t total = 0;
+        ssize_t total = 0;
 
         /* read stdin */
         if (f == NULL) {
                 int err = 0;
                 total = stream_count(stdin, m, l, &err);
-                panic_if(total <= 0, "ERROR: %s\n", strerror(err));
+                PANIC_IF(total < 0, "ERROR: %s\n", strerror(err));
                 printf("%ld\n", total);
                 return;
         }
@@ -123,7 +123,7 @@ static void process_stream(struct option *f,
         /* run thread */
         for (uint32_t i = 0; i < f->nval; i++) {
                 pthread_join(threads[i], NULL);
-                panic_if(args[i].ret < 0, "ERROR: %s\n", args[i].path, strerror(args[i].err));
+                PANIC_IF(args[i].err != 0, "ERROR: %s: %s\n", args[i].path, strerror(args[i].err));
                 printf("%8ld %s\n", args[i].ret, args[i].path);
                 total += args[i].ret;
         }
