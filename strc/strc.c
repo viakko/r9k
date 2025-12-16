@@ -10,7 +10,7 @@
 #include <pthread.h>
 #include <r9k/argparser.h>
 #include <r9k/string.h>
-#include <r9k/utils.h>
+#include <r9k/panic.h>
 
 #define BUFSIZE 262144 /* 256kb */
 
@@ -102,8 +102,7 @@ static void process_stream(struct option *f,
         if (f == NULL) {
                 int err = 0;
                 total = stream_count(stdin, m, l, &err);
-                if (total <= 0)
-                        die("ERROR read in standard input: %s\n", strerror(err));
+                panic_if(total <= 0, "ERROR: %s\n", strerror(err));
                 printf("%ld\n", total);
                 return;
         }
@@ -124,8 +123,7 @@ static void process_stream(struct option *f,
         /* run thread */
         for (uint32_t i = 0; i < f->nval; i++) {
                 pthread_join(threads[i], NULL);
-                if (args[i].ret < 0)
-                        die("ERROR read in file %s: %s\n", args[i].path, strerror(args[i].err));
+                panic_if(args[i].ret < 0, "ERROR: %s\n", args[i].path, strerror(args[i].err));
                 printf("%8ld %s\n", args[i].ret, args[i].path);
                 total += args[i].ret;
         }
@@ -141,7 +139,7 @@ int main(int argc, char* argv[])
 
         ap = argparser_create("strc", "1.0.0");
         if (!ap)
-                die("argparser initialize failed");
+                panic("argparser initialize failed");
 
         argparser_add0(ap, &m, "m", NULL, "count characters by unicode.", NULL, 0);
         argparser_add0(ap, &l, "l", NULL, "count line.", NULL, 0);
@@ -150,7 +148,7 @@ int main(int argc, char* argv[])
         argparser_mutual_exclude(ap, &m, &l);
 
         if (argparser_run(ap, argc, argv) != 0)
-                die("%s\n", argparser_error(ap));
+                panic("%s\n", argparser_error(ap));
 
         if (f || argparser_count(ap) == 0) {
                 process_stream(f, m, l);
