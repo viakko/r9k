@@ -439,6 +439,22 @@ static int handle_long(struct argparser *ap, int *i, char *tok, char *argv[])
         return r < 0 ? r : 0;
 }
 
+static int o_exists(struct argparser *ap, const char *longopt, const char *shortopt)
+{
+        /* check exists */
+        if (longopt && lookup_long(ap, longopt)) {
+                WARNING("long option --%s already exists\n", longopt);
+                return -EINVAL;
+        }
+
+        if (shortopt && lookup_short_str(ap, shortopt)) {
+                WARNING("short option -%s already exists\n", shortopt);
+                return -EINVAL;
+        }
+
+        return 0;
+}
+
 int _argparser_builtin_callback_help(struct argparser *ap, struct option *op_hdr)
 {
         (void) op_hdr;
@@ -554,16 +570,8 @@ int argparser_addn(struct argparser *ap,
         int r;
         struct option_hdr *op_hdr;
 
-        /* check exists */
-        if (longopt && lookup_long(ap, longopt)) {
-                WARNING("long option --%s already exists\n", longopt);
-                return -EINVAL;
-        }
-
-        if (shortopt && lookup_short_str(ap, shortopt)) {
-                WARNING("short option -%s already exists\n", shortopt);
-                return -EINVAL;
-        }
+        if ((r = o_exists(ap, longopt, shortopt)) != 0)
+                return r;
 
         /* Initialize the user option pointer to NULL,
          * If the user provides this option in command line,
@@ -583,6 +591,7 @@ int argparser_addn(struct argparser *ap,
         op_hdr->_slot = result_slot;
         op_hdr->_cb = cb;
 
+        /* builtin_option_add does NOT free ap or ap->opts on success or failure */
         r = builtin_option_add(ap, op_hdr);
         if (r != 0) {
                 free(op_hdr);
