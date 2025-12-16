@@ -4,7 +4,7 @@ CFLAGS    := -Werror -Wall -Wextra -O3 -std=c17
 BUILDDIR  := ../build
 LIBDIR    := $(BUILDDIR)/lib
 BINDIR    := $(BUILDDIR)/bin
-INCLUDES  := -I../tools/include
+INCLUDES  := -I../include -I../tools/include
 CFLAGS    += $(INCLUDES)
 LINKDIR   := -L$(BUILDDIR)/lib
 SUBDIRS   := tools strc

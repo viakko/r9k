@@ -3,5 +3,7 @@ project(r9k C)
 
 set(CMAKE_C_STANDARD 17)
 
+include_directories(SYSTEM include)
+
 add_subdirectory(tools)
 add_subdirectory(strc)

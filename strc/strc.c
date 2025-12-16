@@ -9,7 +9,7 @@
 #include <errno.h>
 #include <pthread.h>
 #include <r9k/argparser.h>
-#include <r9k/typedefs.h>
+#include <r9k/macros.h>
 #include <r9k/string.h>
 
 #define BUFSIZE 262144 /* 256kb */

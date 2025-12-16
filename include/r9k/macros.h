@@ -2,10 +2,14 @@
 * SPDX-License-Identifier: MIT
  * Copyright (c) 2025 viakko
  */
-#ifndef TYPEDEFS_H_
-#define TYPEDEFS_H_
+#ifndef MACROS_H_
+#define MACROS_H_
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
+
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
 #define die(fmt, ...)                           \
 do {                                            \
@@ -13,4 +17,4 @@ do {                                            \
         exit(EXIT_FAILURE);                     \
 } while (0)
 
-#endif /* TYPEDEFS_H_ */
+#endif /* MACROS_H_ */
