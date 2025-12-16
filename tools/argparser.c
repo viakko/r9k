@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
-#include <r9k/compiler_attrs.h>
 
 #define MIN_CAP 8 /* default */
 #define MAX_MSG 4096
@@ -62,7 +61,6 @@ struct argparser
 };
 
 static void ap_error(struct argparser *ap, const char *fmt, ...)
-        __attr_printf(2, 3)
 {
         va_list va;
         size_t n;

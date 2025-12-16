@@ -7,3 +7,4 @@ include_directories(SYSTEM include)
 
 add_subdirectory(tools)
 add_subdirectory(strc)
+add_subdirectory(url)

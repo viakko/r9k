@@ -5,6 +5,8 @@
 #ifndef COMPILER_ATTRUBUTES_H_
 #define COMPILER_ATTRUBUTES_H_
 
+#define __attr_ignore(x) ((void)(x))
+
 #if defined(__GNUC__) || defined(__clang__)
 #  define __attr_nonnull(...) __attribute__((nonnull(__VA_ARGS__)))
 #  define __attr_unused       __attribute__((unused))
