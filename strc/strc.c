@@ -57,12 +57,12 @@ static ssize_t stream_count(FILE *fptr, struct option *m, struct option *l, int 
         ssize_t total = 0;
         ssize_t n;
 
-        while ((n = fread(buf, 1, BUFSIZE, fptr)) > 0) {
+        while ((n = (ssize_t) fread(buf, 1, BUFSIZE, fptr)) > 0) {
                 if (m) {
                         buf[n] = '\0';
-                        total += utf8len(buf);
+                        total += (ssize_t) utf8len(buf);
                 } else if (l) {
-                       total += line_count(buf, n);
+                       total += (ssize_t) line_count(buf, n);
                 } else {
                         total += n;
                 }
@@ -83,12 +83,14 @@ static void *stream_count_worker(void *_arg)
         FILE* fp = fopen(arg->path, "r");
         if (!fp) {
                 arg->err = errno;
-                return NULL;
+                goto out;
         }
 
         arg->ret = stream_count(fp, arg->m, arg->l, &arg->err);
 
         fclose(fp);
+
+out:
         return NULL;
 }
 

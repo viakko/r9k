@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <assert.h>
 
 #define MIN_CAP 8 /* default */
 #define MAX_MSG 4096
@@ -419,7 +420,7 @@ static int handle_short(struct argparser *ap, int *i, char *tok, char *argv[])
 
 static int handle_long(struct argparser *ap, int *i, char *tok, char *argv[])
 {
-        int r = 0;
+        int r;
         char *eqval = NULL;
         struct option_hdr *op_hdr;
 
@@ -482,7 +483,7 @@ struct argparser *argparser_create_raw(const char *name, const char *version)
 
         /* options */
         ap->optcap = MIN_CAP;
-        ap->opts = calloc(ap->optcap, sizeof(*ap->opts));
+        ap->opts = calloc(ap->optcap, sizeof(struct option_hdr *));
         if (!ap->opts) {
                 ap_error(ap, strerror(errno));
                 argparser_free(ap);
@@ -524,9 +525,12 @@ void argparser_free(struct argparser *ap)
 
         if (ap->opts) {
                 for (uint32_t i = 0; i < ap->nopt; i++) {
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "NullDereference"
                         struct option_hdr *op_hdr = ap->opts[i];
+#pragma clang diagnostic pop
                         free(op_hdr->pub.vals);
-                        free(ap->opts[i]);
+                        free(op_hdr);
                 }
                 free(ap->opts);
         }
@@ -732,6 +736,8 @@ const char *argparser_val(struct argparser *ap, uint32_t index)
         return ap->posvals[index];
 }
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "ConstantFunctionResult"
 const char *argparser_help(struct argparser *ap)
 {
         size_t n = 0;
@@ -791,3 +797,4 @@ out:
         ap->help[n] = '\0';
         return ap->help;
 }
+#pragma clang diagnostic pop

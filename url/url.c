@@ -87,7 +87,7 @@ static int url_encode(struct argparser *ap, struct option *o_encode)
         q = out;
         for (p = (const unsigned char *) o_encode->sval; *p; p++) {
                 if (is_unreserved(*p)) {
-                        *q++ = *p;
+                        *q++ = (char) *p;
                 } else {
                         sprintf(q, "%%%02X", *p);
                         q += 3;
