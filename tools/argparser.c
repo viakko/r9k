@@ -799,7 +799,7 @@ struct option *argparser_has(struct argparser *ap, const char *name)
         struct option_hdr *op_hdr;
 
         op_hdr = find_hdr_option(ap, name);
-        if (op_hdr)
+        if (!op_hdr)
                 return NULL;
 
         return *op_hdr->_slot ? &op_hdr->pub : NULL;
