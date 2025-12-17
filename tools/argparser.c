@@ -525,10 +525,7 @@ void argparser_free(struct argparser *ap)
 
         if (ap->opts) {
                 for (uint32_t i = 0; i < ap->nopt; i++) {
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "NullDereference"
                         struct option_hdr *op_hdr = ap->opts[i];
-#pragma clang diagnostic pop
                         free(op_hdr->pub.vals);
                         free(op_hdr);
                 }
@@ -736,8 +733,6 @@ const char *argparser_val(struct argparser *ap, uint32_t index)
         return ap->posvals[index];
 }
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "ConstantFunctionResult"
 const char *argparser_help(struct argparser *ap)
 {
         size_t n = 0;
@@ -797,4 +792,3 @@ out:
         ap->help[n] = '\0';
         return ap->help;
 }
-#pragma clang diagnostic pop
