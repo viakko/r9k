@@ -1,6 +1,9 @@
 /*
 -* SPDX-License-Identifier: MIT
  * Copyright (c) 2025 viakko
+ *
+ * NOTE: This source file deos not depend on any third-party libraries,
+ *       not even header files.
  */
 #include <r9k/argparser.h>
 #include <stdlib.h>
@@ -9,7 +12,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
-#include <assert.h>
 
 #define MIN_CAP 8 /* default */
 #define MAX_MSG 4096
@@ -20,6 +22,8 @@
 
 #define WARNING(fmt, ...) \
         fprintf(stderr, "WARNING: " fmt "", ##__VA_ARGS__)
+
+typedef void (*fn_iterate_t)(size_t, void *);
 
 struct option_hdr
 {
@@ -49,6 +53,12 @@ struct argparser
         uint32_t nposval;
         uint32_t posvalcap;
 
+        /* sub argparser */
+        bool is_cmd;
+        argparser_cmd_callback_t cmd_callback;
+        struct argparser *cmd_next;
+        struct argparser *cmd_tail;
+
         /* buff */
         char error[MAX_MSG];
         char help[MAX_MSG];
@@ -61,7 +71,19 @@ struct argparser
         uint32_t _mulid;
 };
 
-static void ap_error(struct argparser *ap, const char *fmt, ...)
+static struct argparser *lookup_cmd(struct argparser *ap, const char *name)
+{
+        if (!ap->cmd_next)
+                return NULL;
+
+        if (strcmp(ap->cmd_next->name, name) == 0)
+                return ap->cmd_next;
+
+        return lookup_cmd(ap->cmd_next, name);
+}
+
+__attribute__((format(printf, 2, 3)))
+static void _error(struct argparser *ap, const char *fmt, ...)
 {
         va_list va;
         size_t n;
@@ -136,7 +158,7 @@ static int store_option_val(struct argparser *ap,
                             const char *val)
 {
         if (op_hdr->pub.nval > op_hdr->_maxval) {
-                ap_error(ap, "%s%s option value out of %d", OPT_PREFIX(is_long), tok, op_hdr->_maxval);
+                _error(ap, "%s%s option value out of %d", OPT_PREFIX(is_long), tok, op_hdr->_maxval);
                 return -EOVERFLOW;
         }
 
@@ -145,7 +167,7 @@ static int store_option_val(struct argparser *ap,
                 op_hdr->pub.nval = 0;
                 op_hdr->pub.vals = calloc(op_hdr->_valcap, sizeof(char *));
                 if (!op_hdr->pub.vals) {
-                        ap_error(ap, strerror(errno));
+                        _error(ap, "%s", strerror(errno));
                         return -ENOMEM;
                 }
         }
@@ -155,7 +177,7 @@ static int store_option_val(struct argparser *ap,
                 op_hdr->_valcap *= 2;
                 tmp_vals = realloc(op_hdr->pub.vals, sizeof(char *) * op_hdr->_valcap);
                 if (!tmp_vals) {
-                        ap_error(ap, strerror(errno));
+                        _error(ap, "%s", strerror(errno));
                         return -ENOMEM;
                 }
 
@@ -205,7 +227,7 @@ static int try_take_val(struct argparser *ap,
 
                 struct option_hdr *ent = is_mutual(ap, op_hdr);
                 if (ent) {
-                       ap_error(ap, "%s%s conflicts with option %s%s",
+                       _error(ap, "%s%s conflicts with option %s%s",
                                OPT_PREFIX(is_long), tok,
                                ent->pub.shortopt ? "-" : "--",
                                ent->pub.shortopt ? ent->pub.shortopt : ent->pub.longopt);
@@ -216,7 +238,7 @@ static int try_take_val(struct argparser *ap,
 
         if (op_hdr->_maxval == 0) {
                 if (op_hdr->_flags & O_REQUIRED) {
-                        ap_error(ap, "option %s%s flag need requires a value, but max capacity is zero",
+                        _error(ap, "option %s%s flag need requires a value, but max capacity is zero",
                               OPT_PREFIX(is_long), tok);
                         return -EINVAL;
                 }
@@ -234,7 +256,7 @@ static int try_take_val(struct argparser *ap,
 
                 if (!val || val[0] == '-') {
                         if ((op_hdr->_flags & O_REQUIRED) && op_hdr->pub.nval == 0) {
-                                ap_error(ap, "option %s%s missing required argument", OPT_PREFIX(is_long), tok);
+                                _error(ap, "option %s%s missing required argument", OPT_PREFIX(is_long), tok);
                                 return -EINVAL;
                         }
                         break;
@@ -343,7 +365,7 @@ static int handle_short_assign(struct argparser *ap, char *tok, int *i, char *ar
         }
 
         if (eqval) {
-                ap_error(ap, "unknown option: -%s", tok);
+                _error(ap, "unknown option: -%s", tok);
                 return -EINVAL;
         }
 
@@ -360,22 +382,22 @@ static int handle_short_group(struct argparser *ap, char *tok, int *i, char *arg
         for (int k = 0; tok[k]; k++) {
                 op_hdr = lookup_short_char(ap, tok[k]);
                 if (!op_hdr) {
-                        ap_error(ap, "unknown option: -%c", tok[k]);
+                        _error(ap, "unknown option: -%c", tok[k]);
                         return -EINVAL;
                 }
 
                 if (op_hdr->_flags & O_CONCAT) {
-                        ap_error(ap, "invalid option -%c cannot be in a group", tok[k]);
+                        _error(ap, "invalid option -%c cannot be in a group", tok[k]);
                         return -EINVAL;
                 }
 
                 if (op_hdr->_flags & O_NOGROUP) {
-                        ap_error(ap, "option -%c cannot be used as a group", tok[k]);
+                        _error(ap, "option -%c cannot be used as a group", tok[k]);
                         return -EINVAL;
                 }
 
                 if (has_val && op_hdr->_maxval > 0) {
-                        ap_error(ap, "option -%c does not accept a value, cause option -%c already acceped", tok[k], has_val_opt);
+                        _error(ap, "option -%c does not accept a value, cause option -%c already acceped", tok[k], has_val_opt);
                         return -EINVAL;
                 }
 
@@ -432,7 +454,7 @@ static int handle_long(struct argparser *ap, int *i, char *tok, char *argv[])
 
         op_hdr = lookup_long(ap, tok);
         if (!op_hdr) {
-                ap_error(ap, "unknown option: --%s", tok);
+                _error(ap, "unknown option: --%s", tok);
                 return -EINVAL;
         }
 
@@ -480,12 +502,13 @@ struct argparser *argparser_create_raw(const char *name, const char *version)
 
         ap->name = name;
         ap->version = version;
+        ap->is_cmd = false;
 
         /* options */
         ap->optcap = MIN_CAP;
         ap->opts = calloc(ap->optcap, sizeof(struct option_hdr *));
         if (!ap->opts) {
-                ap_error(ap, strerror(errno));
+                _error(ap, "%s", strerror(errno));
                 argparser_free(ap);
                 return NULL;
         }
@@ -494,7 +517,7 @@ struct argparser *argparser_create_raw(const char *name, const char *version)
         ap->posvalcap = MIN_CAP;
         ap->posvals = calloc(ap->posvalcap, sizeof(*ap->posvals));
         if (!ap->posvals) {
-                ap_error(ap, strerror(errno));
+                _error(ap, "%s", strerror(errno));
                 argparser_free(ap);
                 return NULL;
         }
@@ -518,6 +541,37 @@ struct argparser *argparser_create(const char *name, const char *version)
         return ap;
 }
 
+int argparser_cmd_register(struct argparser *parent,
+                       const char *name,
+                       argparser_register_t reg,
+                       argparser_cmd_callback_t cb)
+{
+        if (!parent)
+                return -EINVAL;
+
+        struct argparser *ap;
+
+        ap = argparser_create(name, parent->version);
+        if (!ap)
+                return -EINVAL;
+
+        ap->is_cmd = true;
+        ap->cmd_callback = cb;
+
+        if (!parent->cmd_next) {
+                parent->cmd_next = ap;
+        } else {
+                parent->cmd_tail->cmd_next = ap;
+        }
+
+        parent->cmd_tail = ap;
+
+        if (reg)
+                return reg(ap);
+
+        return 0;
+}
+
 void argparser_free(struct argparser *ap)
 {
         if (!ap)
@@ -531,6 +585,9 @@ void argparser_free(struct argparser *ap)
                 }
                 free(ap->opts);
         }
+
+        if (ap->cmd_next)
+                argparser_free(ap->cmd_next);
 
         free(ap->posvals);
 
@@ -602,7 +659,7 @@ int argparser_addn(struct argparser *ap,
         return r;
 }
 
-static int execacb(struct argparser *ap)
+static int ap_exec(struct argparser *ap)
 {
         int r;
         struct option_hdr *op_hdr;
@@ -642,16 +699,22 @@ void _argparser_builtin_mutual_exclude(struct argparser *ap, ...)
         va_end(va);
 }
 
-int argparser_run(struct argparser *ap, int argc, char *argv[])
+static int _argparser_run0(struct argparser *ap, int argc, char *argv[])
 {
         int r;
-        char *tok;
+        int i = 1;
+        char *tok = NULL;
+        struct argparser *cmd = NULL;
         bool terminator = false;
+        int cmd_argc = 0;
+        char *cmd_argv[argc];
 
-        if (!ap)
-                return -EFAULT;
+        if (argc > 1 && (cmd = lookup_cmd(ap, argv[1])) != NULL) {
+                i = 2; /* skip sub command */
+                cmd_argv[cmd_argc++] = argv[1];
+        }
 
-        for (int i = 1; i < argc; i++) {
+        for (; i < argc; i++) {
                 tok = argv[i];
 
                 if (tok[0] == '-' && tok[1] == '-' && tok[2] == '\0') {
@@ -660,12 +723,17 @@ int argparser_run(struct argparser *ap, int argc, char *argv[])
                 }
 
                 if (terminator || tok[0] != '-') {
-                        store_position_val(ap, tok);
+                        store_position_val(cmd ? cmd : ap, tok);
                         continue;
                 }
 
                 if (tok[1] == '-') {
                         tok += 2;
+
+                        if (cmd && !lookup_long(ap, tok)) {
+                                cmd_argv[cmd_argc++] = argv[i];
+                                continue;
+                        }
 
                         r = handle_long(ap, &i, tok, argv);
                         if (r != 0)
@@ -674,17 +742,45 @@ int argparser_run(struct argparser *ap, int argc, char *argv[])
                         continue;
                 }
 
-                tok++;
+                tok++; /* skip '-' */
+
+                if (cmd && (!lookup_short_str(ap, tok) || !lookup_short_char(ap, tok[0]))) {
+                        cmd_argv[cmd_argc++] = argv[i];
+                        continue;
+                }
+
                 r = handle_short(ap, &i, tok, argv);
                 if (r != 0)
                         return r;
         }
 
-        r = execacb(ap);
+        /* if include cmd parsing for sub command. */
+        if (cmd) {
+                if ((r = _argparser_run0(cmd, cmd_argc, cmd_argv)) != 0) {
+                        _error(ap, "%s", cmd->error);
+                        return r;
+                }
+                cmd->cmd_callback(cmd);
+        }
+
+        r = ap_exec(ap);
         if (r != 0)
                 return r;
 
         return 0;
+}
+
+int argparser_run(struct argparser *ap, int argc, char *argv[])
+{
+        if (!ap)
+                return -EFAULT;
+
+        if (ap->is_cmd) {
+                _error(ap, "not allow sub argparser call argparser_run()");
+                return -EINVAL;
+        }
+
+        return _argparser_run0(ap, argc, argv);
 }
 
 const char *argparser_error(struct argparser *ap)
@@ -745,7 +841,7 @@ const char *argparser_help(struct argparser *ap)
                 __r = snprintf(ap->help + n, cap - n, (fmt),    \
                                ##__VA_ARGS__);                  \
                 if (__r < 0) {                                  \
-                        ap_error(ap, strerror(errno));          \
+                        _error(ap, "%s", strerror(errno));      \
                         return NULL;                            \
                 }                                               \
                 if ((size_t) __r >= cap - n)                    \

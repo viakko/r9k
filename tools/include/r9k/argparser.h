@@ -55,9 +55,10 @@
 
 #include <stdint.h>
 
-#define O_REQUIRED (1 << 1) /* required value */
-#define O_CONCAT   (1 << 2) /* allow arguments like: -O1 -O2 */
-#define O_NOGROUP  (1 << 3) /* not allow a group */
+/* option flags */
+#define O_REQUIRED     (1 << 1) /* required value */
+#define O_CONCAT       (1 << 2) /* allow arguments like: -O1 -O2 */
+#define O_NOGROUP      (1 << 3) /* not allow a group */
 
 #define ACB_EXIT_HELP _argparser_builtin_callback_help
 #define ACB_EXIT_VERSION _argparser_builtin_callback_version
@@ -67,6 +68,8 @@ struct option;
 
 /* return zero means success otherwith error. */
 typedef int (*argparser_callback_t)(struct argparser *, struct option *);
+typedef int (*argparser_register_t)(struct argparser *);
+typedef int (*argparser_cmd_callback_t)(struct argparser *);
 
 struct option
 {
@@ -84,6 +87,11 @@ int _argparser_builtin_callback_version(struct argparser *ap, struct option *opt
 /* If a result doesn't equal to 0 that mean error. */
 struct argparser *argparser_create_raw(const char *name, const char *version); /* no builtin options. */
 struct argparser *argparser_create(const char *name, const char *version); /* builtin help and version options */
+/* Register subcommand of argparser */
+int argparser_cmd_register(struct argparser *parent,
+                           const char *name,
+                           argparser_register_t reg,
+                           argparser_cmd_callback_t cb);
 void argparser_free(struct argparser *ap);
 
 /* Add options to argparser.
