@@ -38,46 +38,18 @@ static int is_unreserved(unsigned char c)
         }
 }
 
-static int url_query(struct argparser *ap, struct option *o_qs)
-{
-        __attr_ignore(ap);
-
-        const char *q;
-        const char *amp;
-
-        q = strchr(o_qs->sval, '?');
-
-        q++; /* skip '?' */
-
-        if (!no_pretty)
-                printf("=== QUERY ===\n");
-
-        while (*q) {
-                amp = strchr(q, '&');
-                if (!amp)
-                        break;
-
-                if (!no_pretty)
-                        putchar(' ');
-
-                fwrite(q, 1, amp - q, stdout);
-                putchar('\n');
-
-                q = amp + 1;
-        }
-
-        return 0;
-}
-
-static int url_encode(struct argparser *ap, struct option *o_encode)
+static int url_encode(struct argparser *ap)
 {
         __attr_ignore(ap);
 
         const unsigned char *p;
         char *out, *q;
         size_t len = 0;
+        const char *url;
 
-        for (p = (const unsigned char *) o_encode->sval; *p; p++)
+        url = argparser_val(ap, 0);
+
+        for (p = (const unsigned char *) url; *p; p++)
                 len += is_unreserved(*p) ? 1 : 3;
 
         out = malloc(len + 1);
@@ -85,7 +57,7 @@ static int url_encode(struct argparser *ap, struct option *o_encode)
                 return -1;
 
         q = out;
-        for (p = (const unsigned char *) o_encode->sval; *p; p++) {
+        for (p = (const unsigned char *) url; *p; p++) {
                 if (is_unreserved(*p)) {
                         *q++ = (char) *p;
                 } else {
@@ -105,21 +77,21 @@ static int url_encode(struct argparser *ap, struct option *o_encode)
         return 0;
 }
 
-static int url_decode(struct argparser *ap, struct option *o_decode)
+static int url_decode(struct argparser *ap)
 {
         __attr_ignore(ap);
 
         char *out, *q;
-        const char *p, *s;
+        const char *p, *url;
 
-        s = o_decode->sval;
+        url = argparser_val(ap, 0);
 
-        out = malloc(strlen(s) + 1);
+        out = malloc(strlen(url) + 1);
         if (!out)
                 return -1;
 
         q = out;
-        for (p = s; *p; p++) {
+        for (p = url; *p; p++) {
                 if (*p == '%' && isxdigit((unsigned char)p[1]) && isxdigit((unsigned char)p[2])) {
                         int hi = hex_val(p[1]);
                         int lo = hex_val(p[2]);
@@ -140,20 +112,61 @@ static int url_decode(struct argparser *ap, struct option *o_decode)
         return 0;
 }
 
+static int url_query(struct argparser *ap)
+{
+        const char *s;
+        const char *q;
+        const char *end;
+
+        __attr_ignore(ap);
+
+        s = argparser_val(ap, 0);
+        if (!s)
+                return 0;
+
+        q = strchr(s, '?');
+        if (!q || !*(q + 1))
+                return 0;
+
+        q++; /* skip '?' */
+
+        if (!no_pretty)
+                printf("=== QUERY ===\n");
+
+        while (*q) {
+                end = strchr(q, '&');
+                if (!end)
+                        end = q + strlen(q);
+
+                if (end > q) {
+                        if (!no_pretty)
+                                putchar(' ');
+                        fwrite(q, 1, end - q, stdout);
+                        putchar('\n');
+                }
+
+                if (!*end)
+                        break;
+
+                q = end + 1;
+        }
+
+        return 0;
+}
+
 int main(int argc, char* argv[])
 {
         struct argparser *ap;
-        struct option *qs;
-        struct option *encode;
-        struct option *decode;
 
         ap = argparser_create("url", "1.0");
         PANIC_IF(!ap, "argparser initialize failed");
 
-        argparser_add1(ap, &qs, "qs", NULL, "parse parameters in url", url_query, O_REQUIRED);
-        argparser_add1(ap, &encode, "encode", NULL, "url encoding", url_encode, O_REQUIRED);
-        argparser_add1(ap, &decode, "decode", NULL, "url decoding", url_decode, O_REQUIRED);
-        argparser_add0(ap, &no_pretty, NULL, "no-pretty", "do not show option title", NULL, 0);
+        argparser_cmd_register(ap, "encode", NULL, url_encode);
+        argparser_cmd_register(ap, "decode", NULL, url_decode);
+        argparser_cmd_register(ap, "qs", NULL, url_query);
+
+        /* global option */
+        argparser_add0(ap, &no_pretty, NULL, "no-pretty", "not format", NULL, 0);
 
         if (argparser_run(ap, argc, argv) != 0)
                 PANIC("%s\n", argparser_error(ap));
