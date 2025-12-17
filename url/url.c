@@ -151,8 +151,8 @@ int main(int argc, char* argv[])
         PANIC_IF(!ap, "argparser initialize failed");
 
         argparser_add1(ap, &qs, "qs", NULL, "parse parameters in url", url_query, O_REQUIRED);
-        argparser_add1(ap, &encode, NULL, "encode", "url encoding", url_encode, O_REQUIRED);
-        argparser_add1(ap, &decode, NULL, "decode", "url decoding", url_decode, O_REQUIRED);
+        argparser_add1(ap, &encode, "encode", NULL, "url encoding", url_encode, O_REQUIRED);
+        argparser_add1(ap, &decode, "decode", NULL, "url decoding", url_decode, O_REQUIRED);
         argparser_add0(ap, &no_pretty, NULL, "no-pretty", "do not show option title", NULL, 0);
 
         if (argparser_run(ap, argc, argv) != 0)
