@@ -891,6 +891,9 @@ const char *argparser_help(struct argparser *ap)
         struct argparser *next = NULL;
         struct option_hdr *op_hdr = NULL;
 
+        if (ap->help)
+                return ap->help;
+
         _append_help(ap, "Usage: \n");
 
         if (!ap->is_cmd && ap->cmd_next) {
