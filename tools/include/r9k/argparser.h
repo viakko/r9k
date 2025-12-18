@@ -91,12 +91,13 @@ typedef int (*argparser_cmd_callback_t)(struct argparser *);
 
 struct option
 {
-        const char*  shortopt;
-        const char*  longopt;
-        const char*  tips;
-        const char*  sval;
-        uint32_t     nval;
-        const char** vals;
+        const char*  shortopt;          /* short option string, e.g. "-v" */
+        const char*  longopt;           /* long option string, e.g. "--verbose" */
+        const char*  help;              /* option help message */
+        const char*  metavar;           /* value placeholder shown in help output */
+        const char*  sval;              /* first value */
+        uint32_t     nval;              /* number of values consumed */
+        const char** vals;              /* array of consumed values, in parse order */
 };
 
 int _argparser_builtin_callback_help(struct argparser *ap, struct option *opt);
@@ -121,7 +122,7 @@ int argparser_add0(struct argparser *ap,
                    struct option **result_slot,
                    const char *shortopt,
                    const char *longopt,
-                   const char *tips,
+                   const char *help,
                    argparser_callback_t cb,
                    uint32_t flags); /* no argument */
 
@@ -129,7 +130,8 @@ int argparser_add1(struct argparser *ap,
                    struct option **result_slot,
                    const char *shortopt,
                    const char *longopt,
-                   const char *tips,
+                   const char *help,
+                   const char *metavar,
                    argparser_callback_t cb,
                    uint32_t flags); /* 1 argument */
 
@@ -138,7 +140,8 @@ int argparser_addn(struct argparser *ap,
                    const char *shortopt,
                    const char *longopt,
                    int max,
-                   const char *tips,
+                   const char *help,
+                   const char *metavar,
                    argparser_callback_t cb,
                    uint32_t flags); /* n argument */
 

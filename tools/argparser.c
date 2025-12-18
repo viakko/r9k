@@ -596,22 +596,23 @@ int argparser_add0(struct argparser *ap,
                    struct option **result_slot,
                    const char *shortopt,
                    const char *longopt,
-                   const char *tips,
+                   const char *help,
                    argparser_callback_t cb,
                    uint32_t flags)
 {
-        return argparser_addn(ap, result_slot, shortopt, longopt, 0, tips, cb, flags);
+        return argparser_addn(ap, result_slot, shortopt, longopt, 0, help, NULL, cb, flags);
 }
 
 int argparser_add1(struct argparser *ap,
                    struct option **result_slot,
                    const char *shortopt,
                    const char *longopt,
-                   const char *tips,
+                   const char *help,
+                   const char *metavar,
                    argparser_callback_t cb,
                    uint32_t flags)
 {
-        return argparser_addn(ap, result_slot, shortopt, longopt, 1, tips, cb, flags);
+        return argparser_addn(ap, result_slot, shortopt, longopt, 1, help, metavar, cb, flags);
 }
 
 int argparser_addn(struct argparser *ap,
@@ -619,7 +620,8 @@ int argparser_addn(struct argparser *ap,
                    const char *shortopt,
                    const char *longopt,
                    int max,
-                   const char *tips,
+                   const char *help,
+                   const char *metavar,
                    argparser_callback_t cb,
                    uint32_t flags)
 {
@@ -640,7 +642,8 @@ int argparser_addn(struct argparser *ap,
 
         op_hdr->pub.shortopt = shortopt;
         op_hdr->pub.longopt = longopt;
-        op_hdr->pub.tips = tips;
+        op_hdr->pub.help = help;
+        op_hdr->pub.metavar = metavar;
         op_hdr->_maxval = max;
         op_hdr->_flags = flags;
         op_hdr->_slot = result_slot;
@@ -865,18 +868,18 @@ const char *argparser_help(struct argparser *ap)
         _append_help(ap, "Usage: \n");
 
         if (!ap->is_cmd && ap->cmd_next) {
-                _append_help(ap, "  %s: <commands> [options] [args]\n\n", ap->name);
+                _append_help(ap, "  %s <commands> [options] [args]\n\n", ap->name);
                 _append_help(ap, "Commands:\n");
 
                 next = ap->cmd_next;
                 while (next) {
-                        _append_help(ap, "  %-16s %s\n", next->name, next->cmd_desc);
+                        _append_help(ap, "  %-18s %s\n", next->name, next->cmd_desc);
                         next = next->cmd_next;
                 }
 
                 _append_help(ap, "\nGlobal options:\n");
         } else {
-                _append_help(ap, "  %s: [options] [args]\n\n", ap->name);
+                _append_help(ap, "  %s [options] [args]\n\n", ap->name);
                 _append_help(ap, "Options:\n");
         }
 
@@ -896,14 +899,24 @@ const char *argparser_help(struct argparser *ap)
                 if (op_hdr->pub.longopt)
                         pos += snprintf(opt_buf + pos, sizeof(opt_buf) - pos, "--%s", op_hdr->pub.longopt);
 
-                if (op_hdr->_maxval > 0)
-                        pos += snprintf(opt_buf + pos, sizeof(opt_buf) - pos, " <V>");
+                if (op_hdr->_maxval > 0) {
+                        if (op_hdr->_flags & O_REQUIRED) {
+                                pos += snprintf(opt_buf + pos, sizeof(opt_buf) - pos, " <%s>",
+                                                op_hdr->pub.metavar ? op_hdr->pub.metavar : "value");
+                        } else {
+                                pos += snprintf(opt_buf + pos, sizeof(opt_buf) - pos, " [%s]",
+                                                op_hdr->pub.metavar ? op_hdr->pub.metavar : "value");
+                        }
+
+                        if (op_hdr->_maxval > 1)
+                                pos += snprintf(opt_buf + pos, sizeof(opt_buf) - pos, "...");
+                }
 
                 opt_buf[pos] = '\0';
-                _append_help(ap, "  %-16s", opt_buf);
+                _append_help(ap, "  %-18s", opt_buf);
 
-                if (op_hdr->pub.tips)
-                        _append_help(ap, " %s\n", op_hdr->pub.tips);
+                if (op_hdr->pub.help)
+                        _append_help(ap, " %s\n", op_hdr->pub.help);
         }
 
         _append_help(ap, "\n");

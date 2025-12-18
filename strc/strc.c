@@ -140,13 +140,13 @@ int main(int argc, char* argv[])
         struct argparser *ap;
         struct option *c, *m, *l, *f;
 
-        ap = argparser_create("strc", "1.0.0");
+        ap = argparser_create("strc", "1.0");
         PANIC_IF(!ap, "argparser initialize failed");
 
         argparser_add0(ap, &c, "c", NULL, "count bytes.", NULL, 0);
         argparser_add0(ap, &m, "m", NULL, "count UTF-8 characters", NULL, 0);
         argparser_add0(ap, &l, "l", NULL, "count line.", NULL, 0);
-        argparser_addn(ap, &f, "f", NULL, 128, "count files.", NULL, O_REQUIRED);
+        argparser_addn(ap, &f, "f", NULL, 128, "count files.", "path", NULL, O_REQUIRED);
 
         argparser_mutual_exclude(ap, &c, &m, &l);
 
