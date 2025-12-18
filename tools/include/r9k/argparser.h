@@ -108,6 +108,7 @@ struct argparser *argparser_create(const char *name, const char *version); /* bu
 /* Register subcommand of argparser */
 int argparser_cmd_register(struct argparser *parent,
                            const char *name,
+                           const char *desc,
                            argparser_register_t reg,
                            argparser_cmd_callback_t cb);
 void argparser_free(struct argparser *ap);

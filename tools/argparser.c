@@ -57,13 +57,16 @@ struct argparser
 
         /* sub argparser */
         bool is_cmd;
+        const char *cmd_desc;
         argparser_cmd_callback_t cmd_callback;
         struct argparser *cmd_next;
         struct argparser *cmd_tail;
 
         /* buff */
         char error[MAX_MSG];
-        char help[MAX_MSG];
+        char *help;
+        size_t helplen;
+        size_t helpcap;
 
         /* builtin */
         struct option *opt_h;
@@ -532,9 +535,10 @@ struct argparser *argparser_create(const char *name, const char *version)
 }
 
 int argparser_cmd_register(struct argparser *parent,
-                       const char *name,
-                       argparser_register_t reg,
-                       argparser_cmd_callback_t cb)
+                           const char *name,
+                           const char *desc,
+                           argparser_register_t reg,
+                           argparser_cmd_callback_t cb)
 {
         if (!parent)
                 return AP_ERROR_NULL_PARENT;
@@ -546,6 +550,7 @@ int argparser_cmd_register(struct argparser *parent,
                 return AP_ERROR_CREATE_FAIL;
 
         ap->is_cmd = true;
+        ap->cmd_desc = desc;
         ap->cmd_callback = cb;
 
         if (!parent->cmd_next) {
@@ -578,6 +583,9 @@ void argparser_free(struct argparser *ap)
 
         if (ap->cmd_next)
                 argparser_free(ap->cmd_next);
+
+        if (ap->help)
+                free(ap->help);
 
         free(ap->posvals);
 
@@ -810,62 +818,103 @@ const char *argparser_val(struct argparser *ap, uint32_t index)
         return ap->posvals[index];
 }
 
+__attribute__((format(printf, 2, 3)))
+static ssize_t _append_help(struct argparser *ap, const char *fmt, ...)
+{
+        ssize_t n;
+        va_list va1, va2;
+
+        va_start(va1, fmt);
+        va_copy(va2, va1);
+        n = vsnprintf(NULL, 0, fmt, va2);
+        va_end(va2);
+
+        if (n < 0) {
+                va_end(va1);
+                goto out;
+        }
+
+        /* ensure cap */
+        if (ap->helplen + n >= ap->helpcap) {
+                char *tmp;
+                size_t newcap = (ap->helpcap * 2) + n + 1;
+                tmp = realloc(ap->help, newcap);
+                if (!tmp)
+                        return AP_ERROR_NO_MEMORY;
+                ap->help = tmp;
+                ap->helpcap = newcap; /* make sure the end of '\0' */
+        }
+
+        n = vsnprintf(ap->help + ap->helplen, ap->helpcap - ap->helplen, fmt, va1);
+        va_end(va1);
+
+        if (n >= 0) {
+                ap->helplen += n;
+                ap->help[ap->helplen] = '\0';
+        }
+
+out:
+        return n;
+}
+
 const char *argparser_help(struct argparser *ap)
 {
-        size_t n = 0;
-        size_t cap = sizeof(ap->help);
-        struct option_hdr *op_hdr;
+        struct argparser *next = NULL;
+        struct option_hdr *op_hdr = NULL;
 
-#define APPEND(fmt, ...)                                        \
-        do {                                                    \
-                int __r;                                        \
-                __r = snprintf(ap->help + n, cap - n, (fmt),    \
-                               ##__VA_ARGS__);                  \
-                if (__r < 0) {                                  \
-                        _error(ap, "%s", strerror(errno));      \
-                        return NULL;                            \
-                }                                               \
-                if ((size_t) __r >= cap - n)                    \
-                        goto out;                               \
-                n += __r;                                       \
-        } while (0)
+        _append_help(ap, "Usage: \n");
 
-        if (ap->name)
-                APPEND("Usage: %s [options]\n", ap->name);
+        if (!ap->is_cmd && ap->cmd_next) {
+                _append_help(ap, "  %s: <commands> [options] [args]\n\n", ap->name);
+                _append_help(ap, "Commands:\n");
 
-        APPEND("Options:\n");
+                next = ap->cmd_next;
+                while (next) {
+                        _append_help(ap, "  %-16s %s\n", next->name, next->cmd_desc);
+                        next = next->cmd_next;
+                }
+
+                _append_help(ap, "\nGlobal options:\n");
+        } else {
+                _append_help(ap, "  %s: [options] [args]\n\n", ap->name);
+                _append_help(ap, "Options:\n");
+        }
 
         for (uint32_t i = 0; i < ap->nopt; i++) {
                 op_hdr = ap->opts[i];
+                char opt_buf[128] = "";
+                int pos = 0;
 
                 if (op_hdr->pub.shortopt) {
-                        APPEND("  -%s", op_hdr->pub.shortopt);
-                } else {
-                        APPEND("  ");
-                }
-
-                if (op_hdr->pub.longopt) {
-                        if (op_hdr->pub.shortopt) {
-                                APPEND(", --%s", op_hdr->pub.longopt);
+                        if (op_hdr->pub.longopt) {
+                                pos += snprintf(opt_buf + pos, sizeof(opt_buf) - pos, "-%s, ", op_hdr->pub.shortopt);
                         } else {
-                                APPEND("--%s", op_hdr->pub.longopt);
+                                pos += snprintf(opt_buf + pos, sizeof(opt_buf) - pos, "-%s", op_hdr->pub.shortopt);
                         }
                 }
 
-                if (op_hdr->_flags & O_REQUIRED)
-                        APPEND(" <value>");
+                if (op_hdr->pub.longopt)
+                        pos += snprintf(opt_buf + pos, sizeof(opt_buf) - pos, "--%s", op_hdr->pub.longopt);
+
+                if (op_hdr->_maxval > 0)
+                        pos += snprintf(opt_buf + pos, sizeof(opt_buf) - pos, " <V>");
+
+                opt_buf[pos] = '\0';
+                _append_help(ap, "  %-16s", opt_buf);
 
                 if (op_hdr->pub.tips)
-                        APPEND("\n    %s\n", op_hdr->pub.tips);
-
-                if (i < ap->nopt - 1)
-                        APPEND("\n");
+                        _append_help(ap, " %s\n", op_hdr->pub.tips);
         }
 
-#undef APPEND
-out:
-        if (n >= cap)
-                n = cap - 1;
-        ap->help[n] = '\0';
+        _append_help(ap, "\n");
+
+        if (ap->cmd_next) {
+                _append_help(ap, "Run `%s <command> --help` for more information.", ap->name);
+        } else {
+                _append_help(ap, "Run `%s --help` for more information.", ap->name);
+        }
+
+        _append_help(ap, "\n");
+
         return ap->help;
 }
