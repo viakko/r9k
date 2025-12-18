@@ -63,6 +63,24 @@
 #define ACB_EXIT_HELP _argparser_builtin_callback_help
 #define ACB_EXIT_VERSION _argparser_builtin_callback_version
 
+typedef enum
+{
+        AP_OK                      =  0,
+        AP_ERROR_REQUIRED_VAL      = -1,
+        AP_ERROR_UNKNOWN_OPT       = -2,
+        AP_ERROR_TOO_MANY_VAL      = -3,
+        AP_ERROR_CONFLICT          = -4,
+        AP_ERROR_NO_MEMORY         = -5,
+        AP_ERROR_INVALID_GROUP     = -6,
+        AP_ERROR_MULTI_VAL_OPTS    = -7,
+        AP_ERROR_ALREADY_EXISTS    = -8,
+        AP_ERROR_NULL_PARENT       = -9,
+        AP_ERROR_CREATE_FAIL       = -10,
+        AP_ERROR_CALLBACK_FAIL     = -11,
+        AP_ERROR_NULL_ARGPARSER    = -12,
+        AP_ERROR_SUBCOMMAND_CALL   = -13,
+} argparser_result;
+
 struct argparser;
 struct option;
 
