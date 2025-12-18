@@ -79,6 +79,7 @@ typedef enum
         AP_ERROR_CALLBACK_FAIL     = -11,
         AP_ERROR_NULL_ARGPARSER    = -12,
         AP_ERROR_SUBCOMMAND_CALL   = -13,
+        AP_ERROR_NO_ARG_ACCEPT     = -14,
 } argparser_result;
 
 struct argparser;

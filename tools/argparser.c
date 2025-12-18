@@ -284,6 +284,12 @@ static int try_take_val(struct argparser *ap,
                                OPT_PREFIX(is_long), tok);
                         return AP_ERROR_REQUIRED_VAL;
                 }
+
+                if (eqval) {
+                        _error(ap, "option %s%s does not accept arguments",
+                                   OPT_PREFIX(is_long), tok);
+                        return AP_ERROR_NO_ARG_ACCEPT;
+                }
                 return 0;
         }
 

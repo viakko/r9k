@@ -9,7 +9,6 @@
 #include <pthread.h>
 #include <r9k/argparser.h>
 #include <r9k/panic.h>
-#include <r9k/array.h>
 
 static struct option *opt_azAZ[26];
 
@@ -30,10 +29,10 @@ int main(int argc, char *argv[])
         ap = argparser_create("argparser", "1.0");
         PANIC_IF(!ap, "argparser_create() failed");
 
-        for (int i = 0; i < (int) ARRAY_SIZE(opt_azAZ); i++)
+        for (int i = 0; i < 8; i++)
                 argparser_cmd_register(ap, letters_AZ[i], letters_AZ[i], NULL, NULL);
 
-        for (int i = 0; i < (int) ARRAY_SIZE(opt_azAZ); i++) {
+        for (int i = 0; i < 16; i++) {
                 if (letters_az[i][0] == 'h')
                         continue;
                 argparser_add0(ap, &opt_azAZ[i], letters_az[i], letters_AZ[i], letters_AZ[i], NULL, 0);
