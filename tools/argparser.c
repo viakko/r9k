@@ -516,7 +516,7 @@ int _argparser_builtin_callback_version(struct argparser *ap, struct option *op_
         return 0;
 }
 
-struct argparser *argparser_create_raw(const char *name, const char *version)
+struct argparser *argparser_new(const char *name, const char *version)
 {
         struct argparser *ap;
 
@@ -553,7 +553,7 @@ struct argparser *argparser_create(const char *name, const char *version)
 {
         struct argparser *ap;
 
-        ap = argparser_create_raw(name, version);
+        ap = argparser_new(name, version);
         if (!ap)
                 return NULL;
 
