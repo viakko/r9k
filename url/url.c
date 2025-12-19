@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <ctype.h>
-#include <r9k/argparser.h>
+#include <r9k/argparse.h>
 #include <r9k/string.h>
 #include <r9k/panic.h>
 #include <r9k/compiler_attrs.h>
@@ -38,7 +38,7 @@ static int is_unreserved(unsigned char c)
         }
 }
 
-static int url_encode(struct argparser *ap)
+static int url_encode(struct argparse *ap)
 {
         __attr_ignore(ap);
 
@@ -47,7 +47,7 @@ static int url_encode(struct argparser *ap)
         size_t len = 0;
         const char *url;
 
-        url = argparser_val(ap, 0);
+        url = argparse_val(ap, 0);
         PANIC_IF(!url, "encode: no url arguments\n");
 
         for (p = (const unsigned char *) url; *p; p++)
@@ -78,14 +78,14 @@ static int url_encode(struct argparser *ap)
         return 0;
 }
 
-static int url_decode(struct argparser *ap)
+static int url_decode(struct argparse *ap)
 {
         __attr_ignore(ap);
 
         char *out, *q;
         const char *p, *url;
 
-        url = argparser_val(ap, 0);
+        url = argparse_val(ap, 0);
         PANIC_IF(!url, "decode: no url arguments\n");
 
         out = malloc(strlen(url) + 1);
@@ -114,7 +114,7 @@ static int url_decode(struct argparser *ap)
         return 0;
 }
 
-static int url_query(struct argparser *ap)
+static int url_query(struct argparse *ap)
 {
         const char *url;
         const char *q;
@@ -122,7 +122,7 @@ static int url_query(struct argparser *ap)
 
         __attr_ignore(ap);
 
-        url = argparser_val(ap, 0);
+        url = argparse_val(ap, 0);
         PANIC_IF(!url, "qs: no url arguments\n");
 
         q = strchr(url, '?');
@@ -157,22 +157,22 @@ static int url_query(struct argparser *ap)
 
 int main(int argc, char* argv[])
 {
-        struct argparser *ap;
+        struct argparse *ap;
 
-        ap = argparser_create("url", "1.0");
-        PANIC_IF(!ap, "argparser initialize failed");
+        ap = argparse_create("url", "1.0");
+        PANIC_IF(!ap, "argparse initialize failed");
 
-        argparser_cmd_register(ap, "encode", "encode url", NULL, url_encode);
-        argparser_cmd_register(ap, "decode", "decode url", NULL, url_decode);
-        argparser_cmd_register(ap, "qs", "parsing query parmaeters in url", NULL, url_query);
+        argparse_cmd_register(ap, "encode", "encode url", NULL, url_encode);
+        argparse_cmd_register(ap, "decode", "decode url", NULL, url_decode);
+        argparse_cmd_register(ap, "qs", "parsing query parmaeters in url", NULL, url_query);
 
         /* global option */
-        argparser_add0(ap, &no_pretty, NULL, "no-pretty", "not format", NULL, 0);
+        argparse_add0(ap, &no_pretty, NULL, "no-pretty", "not format", NULL, 0);
 
-        if (argparser_run(ap, argc, argv) != 0)
-                PANIC("%s\n", argparser_error(ap));
+        if (argparse_run(ap, argc, argv) != 0)
+                PANIC("%s\n", argparse_error(ap));
 
-        argparser_free(ap);
+        argparse_free(ap);
 
         return 0;
 }

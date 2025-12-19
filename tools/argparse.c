@@ -2,7 +2,7 @@
 -* SPDX-License-Identifier: MIT
  * Copyright (c) 2025 viakko
  */
-#include <r9k/argparser.h>
+#include <r9k/argparse.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -83,13 +83,13 @@ struct option_hdr
         size_t _long_len;
         uint32_t _valcap;
         struct option** _slot; /* if an input option using _slot writes back the pointer. */
-        argparser_callback_t _cb;
+        argparse_callback_t _cb;
         uint32_t _maxval;
         uint32_t _flags;
         uint32_t _mulid; /* mutual group id */
 };
 
-struct argparser
+struct argparse
 {
         const char *name;
         const char *version;
@@ -101,11 +101,11 @@ struct argparser
         /* position value */
         struct ptrvec posval_vec;
 
-        /* sub argparser */
+        /* sub argparse */
         const char *cmd_desc;
-        argparser_cmd_callback_t cmd_callback;
-        struct argparser *cmd_next;
-        struct argparser *cmd_tail;
+        argparse_cmd_callback_t cmd_callback;
+        struct argparse *cmd_next;
+        struct argparse *cmd_tail;
 
         /* buff */
         char error[1024];
@@ -121,9 +121,9 @@ struct argparser
         uint32_t _mulid;
 };
 
-static struct argparser *find_subcmd(struct argparser *ap, const char *name)
+static struct argparse *find_subcmd(struct argparse *ap, const char *name)
 {
-        struct argparser *p = ap->cmd_next;
+        struct argparse *p = ap->cmd_next;
 
         while (p) {
                 if (strcmp(p->name, name) == 0)
@@ -134,7 +134,7 @@ static struct argparser *find_subcmd(struct argparser *ap, const char *name)
         return NULL;
 }
 
-static struct option_hdr *find_hdr_slot(struct argparser *ap, struct option **slot)
+static struct option_hdr *find_hdr_slot(struct argparse *ap, struct option **slot)
 {
         for (uint32_t i = 0; i < ptrvec_count(&ap->opt_vec); i++) {
                 struct option_hdr *op_hdr = ptrvec_fetch(&ap->opt_vec, i);
@@ -144,7 +144,7 @@ static struct option_hdr *find_hdr_slot(struct argparser *ap, struct option **sl
         return NULL;
 }
 
-static struct option_hdr *find_hdr_option(struct argparser *ap, const char *name)
+static struct option_hdr *find_hdr_option(struct argparse *ap, const char *name)
 {
         bool is_short_char;
         const char *lopt;
@@ -181,7 +181,7 @@ static struct option_hdr *find_hdr_option(struct argparser *ap, const char *name
 }
 
 __attribute__((format(printf, 2, 3)))
-static void error_rec(struct argparser *ap, const char *fmt, ...)
+static void error_rec(struct argparse *ap, const char *fmt, ...)
 {
         va_list va;
         size_t n;
@@ -193,17 +193,17 @@ static void error_rec(struct argparser *ap, const char *fmt, ...)
         va_end(va);
 }
 
-static uint32_t getmulid(struct argparser *ap)
+static uint32_t getmulid(struct argparse *ap)
 {
         return ap->_mulid++;
 }
 
-static int store_position_val(struct argparser *ap, char *val)
+static int store_position_val(struct argparse *ap, char *val)
 {
         return ptrvec_push_back(&ap->posval_vec, val);
 }
 
-static int store_option_val(struct argparser *ap,
+static int store_option_val(struct argparse *ap,
                             struct option_hdr *op_hdr,
                             int is_long,
                             char *tok,
@@ -240,7 +240,7 @@ static int store_option_val(struct argparser *ap,
         return 0;
 }
 
-static struct option_hdr *is_mutual(struct argparser *ap, struct option_hdr *op_hdr)
+static struct option_hdr *is_mutual(struct argparse *ap, struct option_hdr *op_hdr)
 {
         struct option_hdr *ent;
 
@@ -262,7 +262,7 @@ static struct option_hdr *is_mutual(struct argparser *ap, struct option_hdr *op_
 /* Try to take a value for option, if the option not needs a value
  * or max is zero, that return 0 also return options consume value
  * count. */
-static int try_take_val(struct argparser *ap,
+static int try_take_val(struct argparse *ap,
                         struct option_hdr *op_hdr,
                         int is_long,
                         char *tok,
@@ -323,7 +323,7 @@ static int try_take_val(struct argparser *ap,
         return (int) op_hdr->view.nval;
 }
 
-static int handle_short_concat(struct argparser *ap, char *tok, int *i, char *argv[])
+static int handle_short_concat(struct argparse *ap, char *tok, int *i, char *argv[])
 {
         char *defval = NULL;
         struct option_hdr *op_hdr;
@@ -349,7 +349,7 @@ static int handle_short_concat(struct argparser *ap, char *tok, int *i, char *ar
         return 0;
 }
 
-static int handle_short_assign(struct argparser *ap, char *tok, int *i, char *argv[])
+static int handle_short_assign(struct argparse *ap, char *tok, int *i, char *argv[])
 {
         int r = 0;
         char *eqval = NULL;
@@ -388,7 +388,7 @@ static int handle_short_assign(struct argparser *ap, char *tok, int *i, char *ar
         return r;
 }
 
-static int handle_short_group(struct argparser *ap, char *tok, int *i, char *argv[])
+static int handle_short_group(struct argparse *ap, char *tok, int *i, char *argv[])
 {
         bool has_val = false;
         char has_val_opt = 0;
@@ -435,7 +435,7 @@ static int handle_short_group(struct argparser *ap, char *tok, int *i, char *arg
         return 0;
 }
 
-static int handle_short(struct argparser *ap, int *i, char *tok, char *argv[])
+static int handle_short(struct argparse *ap, int *i, char *tok, char *argv[])
 {
         int r;
 
@@ -458,7 +458,7 @@ static int handle_short(struct argparser *ap, int *i, char *tok, char *argv[])
         return handle_short_group(ap, tok, i, argv);
 }
 
-static int handle_long(struct argparser *ap, int *i, char *tok, char *argv[])
+static int handle_long(struct argparse *ap, int *i, char *tok, char *argv[])
 {
         int r;
         char *eqval = NULL;
@@ -494,7 +494,7 @@ static int handle_long(struct argparser *ap, int *i, char *tok, char *argv[])
         return r < 0 ? r : 0;
 }
 
-static void check_warn_exists(struct argparser *ap, const char *longopt, const char *shortopt)
+static void check_warn_exists(struct argparse *ap, const char *longopt, const char *shortopt)
 {
         /* check exists */
         if (longopt && find_hdr_option(ap, longopt)) {
@@ -508,23 +508,23 @@ static void check_warn_exists(struct argparser *ap, const char *longopt, const c
         }
 }
 
-int _argparser_builtin_callback_help(struct argparser *ap, struct option *op_hdr)
+int _builtin_argparse_callback_help(struct argparse *ap, struct option *op_hdr)
 {
         (void) op_hdr;
-        printf("%s", argparser_help(ap));
+        printf("%s", argparse_help(ap));
         exit(0);
 }
 
-int _argparser_builtin_callback_version(struct argparser *ap, struct option *op_hdr)
+int _builtin_argparse_callback_version(struct argparse *ap, struct option *op_hdr)
 {
         (void) op_hdr;
         printf("%s %s\n", ap->name, ap->version);
         exit(0);
 }
 
-struct argparser *argparser_new(const char *name, const char *version)
+struct argparse *argparse_new(const char *name, const char *version)
 {
-        struct argparser *ap;
+        struct argparse *ap;
 
         ap = calloc(1, sizeof(*ap));
         if (!ap)
@@ -536,45 +536,45 @@ struct argparser *argparser_new(const char *name, const char *version)
 
         /* options */
         if (ptrvec_init(&ap->opt_vec) != A_OK) {
-                argparser_free(ap);
+                argparse_free(ap);
                 return NULL;
         }
 
         /* values */
         if (ptrvec_init(&ap->posval_vec) != A_OK) {
-                argparser_free(ap);
+                argparse_free(ap);
                 return NULL;
         }
 
         return ap;
 }
 
-struct argparser *argparser_create(const char *name, const char *version)
+struct argparse *argparse_create(const char *name, const char *version)
 {
-        struct argparser *ap;
+        struct argparse *ap;
 
-        ap = argparser_new(name, version);
+        ap = argparse_new(name, version);
         if (!ap)
                 return NULL;
 
-        argparser_add0(ap, &ap->opt_h, "h", "help", "show this help message.", A_CALLBACK_HELP, 0);
-        argparser_add0(ap, &ap->opt_v, "version", NULL, "show current version.", A_CALLBACK_VERSION, 0);
+        argparse_add0(ap, &ap->opt_h, "h", "help", "show this help message.", A_CALLBACK_HELP, 0);
+        argparse_add0(ap, &ap->opt_v, "version", NULL, "show current version.", A_CALLBACK_VERSION, 0);
 
         return ap;
 }
 
-int argparser_cmd_register(struct argparser *parent,
+int argparse_cmd_register(struct argparse *parent,
                            const char *name,
                            const char *desc,
-                           argparser_register_t reg,
-                           argparser_cmd_callback_t cb)
+                           argparse_register_t reg,
+                           argparse_cmd_callback_t cb)
 {
         if (!parent)
                 return A_ERROR_NULL_PARENT;
 
-        struct argparser *ap;
+        struct argparse *ap;
 
-        ap = argparser_create(name, parent->version);
+        ap = argparse_create(name, parent->version);
         if (!ap)
                 return A_ERROR_CREATE_FAIL;
 
@@ -597,7 +597,7 @@ int argparser_cmd_register(struct argparser *parent,
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
-void argparser_free(struct argparser *ap)
+void argparse_free(struct argparse *ap)
 {
         if (!ap)
                 return;
@@ -611,7 +611,7 @@ void argparser_free(struct argparser *ap)
         ptrvec_free(&ap->opt_vec);
 
         if (ap->cmd_next)
-                argparser_free(ap->cmd_next);
+                argparse_free(ap->cmd_next);
 
         if (ap->help)
                 free(ap->help);
@@ -621,38 +621,15 @@ void argparser_free(struct argparser *ap)
         free(ap);
 }
 
-int argparser_add0(struct argparser *ap,
-                   struct option **result_slot,
-                   const char *shortopt,
-                   const char *longopt,
-                   const char *help,
-                   argparser_callback_t cb,
-                   uint32_t flags)
-{
-        return argparser_addn(ap, result_slot, shortopt, longopt, help, NULL, 0, cb, flags);
-}
-
-int argparser_add1(struct argparser *ap,
-                   struct option **result_slot,
-                   const char *shortopt,
-                   const char *longopt,
-                   const char *help,
-                   const char *metavar,
-                   argparser_callback_t cb,
-                   uint32_t flags)
-{
-        return argparser_addn(ap, result_slot, shortopt, longopt, help, metavar, 1, cb, flags);
-}
-
-int argparser_addn(struct argparser *ap,
-                   struct option **result_slot,
-                   const char *shortopt,
-                   const char *longopt,
-                   const char *help,
-                   const char *metavar,
-                   int maxval,
-                   argparser_callback_t cb,
-                   uint32_t flags)
+int _argparse_addn_impl(struct argparse *ap,
+                        struct option **result_slot,
+                        const char *shortopt,
+                        const char *longopt,
+                        const char *help,
+                        const char *metavar,
+                        int maxval,
+                        argparse_callback_t cb,
+                        uint32_t flags)
 {
         int r;
         struct option_hdr *op_hdr;
@@ -665,12 +642,12 @@ int argparser_addn(struct argparser *ap,
         /* Initialize the user option pointer to NULL,
          * If the user provides this option in command line,
          * the pointer will be updated to point to the actual option object.
-         * WARNING: This pointer becomes invalid after argparser_free(). */
+         * WARNING: This pointer becomes invalid after argparse_free(). */
         *result_slot = NULL;
 
         op_hdr = calloc(1, sizeof(*op_hdr));
         if (!op_hdr) {
-                error_rec(ap, "after call argparser_run()");
+                error_rec(ap, "after call argparse_run()");
                 return A_ERROR_NO_MEMORY;
         }
 
@@ -698,7 +675,7 @@ int argparser_addn(struct argparser *ap,
         return r;
 }
 
-static int ap_exec(struct argparser *ap)
+static int ap_exec(struct argparse *ap)
 {
         int r;
         struct option_hdr *op_hdr;
@@ -715,7 +692,7 @@ static int ap_exec(struct argparser *ap)
         return 0;
 }
 
-void _argparser_builtin_mutual_exclude(struct argparser *ap, ...)
+void _argparse_builtin_mutual_exclude(struct argparse *ap, ...)
 {
         va_list va;
         struct option **slot;
@@ -739,16 +716,16 @@ void _argparser_builtin_mutual_exclude(struct argparser *ap, ...)
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
-static int argparser_run0(struct argparser *ap, int argc, char *argv[])
+static int _builtin_argparse_run(struct argparse *ap, int argc, char *argv[]) // NOLINT(*-reserved-identifier)
 {
         int r;
         int i = 1;
         char *tok = NULL;
-        struct argparser *cmd = NULL;
+        struct argparse *cmd = NULL;
         bool terminator = false;
 
         if (ap->stat_flags & A_RUN) {
-                error_rec(ap, "already call argparser_run()");
+                error_rec(ap, "already call argparse_run()");
                 r = A_ERROR_AFTER_RUN;
                 goto out;
         }
@@ -816,7 +793,7 @@ static int argparser_run0(struct argparser *ap, int argc, char *argv[])
 
         /* if include cmd parsing for sub command. */
         if (cmd) {
-                if ((r = argparser_run0(cmd, (int) ptrvec_count(&arg_vec), (char **) arg_vec.items)) != 0) {
+                if ((r = _builtin_argparse_run(cmd, (int) ptrvec_count(&arg_vec), (char **) arg_vec.items)) != 0) {
                         memcpy(ap->error, cmd->error, sizeof(ap->error));
                         goto out;
                 }
@@ -830,26 +807,26 @@ out:
         return r;
 }
 
-int argparser_run(struct argparser *ap, int argc, char *argv[])
+int argparse_run(struct argparse *ap, int argc, char *argv[])
 {
         if (!ap)
                 return A_ERROR_NULL_ARGPARSER;
 
         if (ap->stat_flags & A_CMD) {
-                error_rec(ap, "not allow sub argparser call argparser_run()");
+                error_rec(ap, "not allow sub argparse call argparse_run()");
                 return A_ERROR_SUBCOMMAND_CALL;
         }
 
-        return argparser_run0(ap, argc, argv);
+        return _builtin_argparse_run(ap, argc, argv);
 }
 
-const char *argparser_error(struct argparser *ap)
+const char *argparse_error(struct argparse *ap)
 {
         return ap->error;
 }
 
 /* Query an option with user input */
-struct option *argparser_has(struct argparser *ap, const char *name)
+struct option *argparse_has(struct argparse *ap, const char *name)
 {
         struct option_hdr *op_hdr;
 
@@ -860,12 +837,12 @@ struct option *argparser_has(struct argparser *ap, const char *name)
         return *op_hdr->_slot ? &op_hdr->view : NULL;
 }
 
-uint32_t argparser_count(struct argparser *ap)
+uint32_t argparse_count(struct argparse *ap)
 {
         return ptrvec_count(&ap->posval_vec);
 }
 
-const char *argparser_val(struct argparser *ap, uint32_t index)
+const char *argparse_val(struct argparse *ap, uint32_t index)
 {
         if (index >= ptrvec_count(&ap->posval_vec))
                 return NULL;
@@ -874,7 +851,7 @@ const char *argparser_val(struct argparser *ap, uint32_t index)
 }
 
 __attribute__((format(printf, 2, 3)))
-static ssize_t append_help(struct argparser *ap, const char *fmt, ...)
+static ssize_t append_help(struct argparse *ap, const char *fmt, ...)
 {
         ssize_t n;
         va_list va1, va2;
@@ -912,9 +889,9 @@ out:
         return n;
 }
 
-const char *argparser_help(struct argparser *ap)
+const char *argparse_help(struct argparse *ap)
 {
-        struct argparser *next = NULL;
+        struct argparse *next = NULL;
         struct option_hdr *op_hdr = NULL;
 
         if (ap->help)

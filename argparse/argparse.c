@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <r9k/argparser.h>
+#include <r9k/argparse.h>
 #include <r9k/panic.h>
 
 static struct option *opt_azAZ[26];
@@ -24,24 +24,24 @@ static char letters_az[26][2] = {
 
 int main(int argc, char *argv[])
 {
-        struct argparser *ap;
+        struct argparse *ap;
 
-        ap = argparser_create("argparser", "1.0");
-        PANIC_IF(!ap, "argparser_create() failed");
+        ap = argparse_create("argparse", "1.0");
+        PANIC_IF(!ap, "argparse_create() failed");
 
         for (int i = 0; i < 8; i++)
-                argparser_cmd_register(ap, letters_AZ[i], letters_AZ[i], NULL, NULL);
+                argparse_cmd_register(ap, letters_AZ[i], letters_AZ[i], NULL, NULL);
 
         for (int i = 0; i < 16; i++) {
                 if (letters_az[i][0] == 'h')
                         continue;
-                argparser_add0(ap, &opt_azAZ[i], letters_az[i], letters_AZ[i], letters_AZ[i], NULL, 0);
+                argparse_add0(ap, &opt_azAZ[i], letters_az[i], letters_AZ[i], letters_AZ[i], NULL, 0);
         }
 
-        if (argparser_run(ap, argc, argv) != 0)
-                fprintf(stderr, "%s\n", argparser_error(ap));
+        if (argparse_run(ap, argc, argv) != 0)
+                fprintf(stderr, "%s\n", argparse_error(ap));
 
-        argparser_free(ap);
+        argparse_free(ap);
 
         return 0;
 }

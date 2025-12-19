@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <pthread.h>
-#include <r9k/argparser.h>
+#include <r9k/argparse.h>
 #include <r9k/string.h>
 #include <r9k/panic.h>
 
@@ -137,26 +137,26 @@ static void process_stream(struct option *f,
 
 int main(int argc, char* argv[])
 {
-        struct argparser *ap;
+        struct argparse *ap;
         struct option *c, *m, *l, *f;
 
-        ap = argparser_create("strc", "1.0");
-        PANIC_IF(!ap, "argparser initialize failed");
+        ap = argparse_create("strc", "1.0");
+        PANIC_IF(!ap, "argparse initialize failed");
 
-        argparser_add0(ap, &c, "c", NULL, "count bytes.", NULL, 0);
-        argparser_add0(ap, &m, "m", NULL, "count UTF-8 characters", NULL, 0);
-        argparser_add0(ap, &l, "l", NULL, "count line.", NULL, 0);
-        argparser_addn(ap, &f, "f", NULL, "count files.", "path", 128, NULL, O_REQUIRED);
+        argparse_add0(ap, &c, "c", NULL, "count bytes.", NULL, 0);
+        argparse_add0(ap, &m, "m", NULL, "count UTF-8 characters", NULL, 0);
+        argparse_add0(ap, &l, "l", NULL, "count line.", NULL, 0);
+        argparse_addn(ap, &f, "f", NULL, "count files.", "path", 128, NULL, O_REQUIRED);
 
-        argparser_mutual_exclude(ap, &c, &m, &l);
+        argparse_mutual_exclude(ap, &c, &m, &l);
 
-        if (argparser_run(ap, argc, argv) != A_OK)
-                PANIC("%s\n", argparser_error(ap));
+        if (argparse_run(ap, argc, argv) != A_OK)
+                PANIC("%s\n", argparse_error(ap));
 
-        if (f || argparser_count(ap) == 0) {
+        if (f || argparse_count(ap) == 0) {
                 process_stream(f, m, l);
         } else {
-                const char *str = argparser_val(ap, 0);
+                const char *str = argparse_val(ap, 0);
                 if (m) {
                         printf("  %ld\n", utf8len(str));
                 } else if (l) {
@@ -166,7 +166,7 @@ int main(int argc, char* argv[])
                 }
         }
 
-        argparser_free(ap);
+        argparse_free(ap);
 
         return 0;
 }
