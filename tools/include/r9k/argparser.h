@@ -77,8 +77,8 @@
 #define A_ERROR_NO_ARG_ACCEPT   -0x0014
 #define A_ERROR_REPEATED_CALL   -0x0015
 
-#define ACB_CALLBACK_HELP _argparser_builtin_callback_help
-#define ACB_CALLBACK_VERSION _argparser_builtin_callback_version
+#define A_CALLBACK_HELP _argparser_builtin_callback_help
+#define A_CALLBACK_VERSION _argparser_builtin_callback_version
 
 struct argparser;
 struct option;

@@ -559,8 +559,8 @@ struct argparser *argparser_create(const char *name, const char *version)
         if (!ap)
                 return NULL;
 
-        argparser_add0(ap, &ap->opt_h, "h", "help", "show this help message.", ACB_CALLBACK_HELP, 0);
-        argparser_add0(ap, &ap->opt_v, "version", NULL, "show current version.", ACB_CALLBACK_VERSION, 0);
+        argparser_add0(ap, &ap->opt_h, "h", "help", "show this help message.", A_CALLBACK_HELP, 0);
+        argparser_add0(ap, &ap->opt_v, "version", NULL, "show current version.", A_CALLBACK_VERSION, 0);
 
         return ap;
 }
