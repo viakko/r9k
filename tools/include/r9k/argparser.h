@@ -80,6 +80,7 @@ typedef enum
         AP_ERROR_NULL_ARGPARSER    = -12,
         AP_ERROR_SUBCOMMAND_CALL   = -13,
         AP_ERROR_NO_ARG_ACCEPT     = -14,
+        AP_ERROR_REPEATED_CALL     = -15,
 } argparser_result;
 
 struct argparser;
@@ -101,6 +102,7 @@ struct option
         const char** vals;              /* array of consumed values, in parse order */
 };
 
+/* EXECUTE AND EXIT */
 int _argparser_builtin_callback_help(struct argparser *ap, struct option *opt);
 int _argparser_builtin_callback_version(struct argparser *ap, struct option *opt);
 

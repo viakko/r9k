@@ -14,6 +14,9 @@
 #define LONG    1
 #define SHORT   0
 
+#define A_CMD   (1 << 1)
+#define A_RUN   (1 << 2)
+
 #define OPT_PREFIX(is_long) (is_long ? "--" : "-")
 
 #define WARNING(fmt, ...) \
@@ -40,6 +43,7 @@ struct argparser
 {
         const char *name;
         const char *version;
+        int stat_flags;
 
         /* options */
         struct option_hdr **opts;
@@ -52,7 +56,6 @@ struct argparser
         uint32_t posvalcap;
 
         /* sub argparser */
-        bool is_cmd;
         const char *cmd_desc;
         argparser_cmd_callback_t cmd_callback;
         struct argparser *cmd_next;
@@ -390,7 +393,7 @@ static int handle_short_group(struct argparser *ap, char *tok, int *i, char *arg
         char short_char_tmp[2];
 
         short_char_tmp[1] = '\0';
-        
+
         for (int k = 0; tok[k]; k++) {
                 short_char_tmp[0] = tok[k];
                 op_hdr = find_hdr_option(ap, short_char_tmp);
@@ -506,14 +509,14 @@ int _argparser_builtin_callback_help(struct argparser *ap, struct option *op_hdr
 {
         (void) op_hdr;
         printf("%s", argparser_help(ap));
-        return 0;
+        exit(0);
 }
 
 int _argparser_builtin_callback_version(struct argparser *ap, struct option *op_hdr)
 {
         (void) op_hdr;
         printf("%s %s\n", ap->name, ap->version);
-        return 0;
+        exit(0);
 }
 
 struct argparser *argparser_new(const char *name, const char *version)
@@ -526,7 +529,6 @@ struct argparser *argparser_new(const char *name, const char *version)
 
         ap->name = name;
         ap->version = version;
-        ap->is_cmd = false;
 
         /* options */
         ap->optcap = MIN_CAP;
@@ -578,7 +580,7 @@ int argparser_cmd_register(struct argparser *parent,
         if (!ap)
                 return AP_ERROR_CREATE_FAIL;
 
-        ap->is_cmd = true;
+        ap->stat_flags |= A_CMD;
         ap->cmd_desc = desc;
         ap->cmd_callback = cb;
 
@@ -742,6 +744,14 @@ static int _argparser_run0(struct argparser *ap, int argc, char *argv[])
         struct argparser *cmd = NULL;
         bool terminator = false;
 
+        if (ap->stat_flags & A_RUN) {
+                _error(ap, "already call argparser_run()");
+                return AP_ERROR_REPEATED_CALL;
+        }
+
+        /* mark already calls run */
+        ap->stat_flags |= A_RUN;
+
         if (argv == NULL)
                 return AP_ERROR_NO_MEMORY;
 
@@ -815,7 +825,7 @@ int argparser_run(struct argparser *ap, int argc, char *argv[])
         if (!ap)
                 return AP_ERROR_NULL_ARGPARSER;
 
-        if (ap->is_cmd) {
+        if (ap->stat_flags & A_CMD) {
                 _error(ap, "not allow sub argparser call argparser_run()");
                 return AP_ERROR_SUBCOMMAND_CALL;
         }
@@ -902,7 +912,7 @@ const char *argparser_help(struct argparser *ap)
 
         _append_help(ap, "Usage: \n");
 
-        if (!ap->is_cmd && ap->cmd_next) {
+        if (!(ap->stat_flags & A_CMD) && ap->cmd_next) {
                 _append_help(ap, "  %s <commands> [options] [args]\n\n", ap->name);
                 _append_help(ap, "Commands:\n");
 
