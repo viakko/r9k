@@ -110,8 +110,8 @@ struct argparse
         /* buff */
         char error[1024];
         char *help;
-        size_t helplen;
-        size_t helpcap;
+        size_t hlen;
+        size_t hcap;
 
         /* builtin */
         struct option *opt_h;
@@ -851,7 +851,7 @@ const char *argparse_val(struct argparse *ap, uint32_t index)
 }
 
 __attribute__((format(printf, 2, 3)))
-static ssize_t append_help(struct argparse *ap, const char *fmt, ...)
+static ssize_t _append_help(struct argparse *ap, const char *fmt, ...) // NOLINT(*-reserved-identifier)
 {
         ssize_t n;
         va_list va1, va2;
@@ -867,22 +867,22 @@ static ssize_t append_help(struct argparse *ap, const char *fmt, ...)
         }
 
         /* ensure cap */
-        if (ap->helplen + n >= ap->helpcap) {
+        if (ap->hlen + n >= ap->hcap) {
                 char *tmp;
-                size_t newcap = (ap->helpcap * 2) + n + 1;
+                size_t newcap = (ap->hcap * 2) + n + 1;
                 tmp = realloc(ap->help, newcap);
                 if (!tmp)
                         return A_ERROR_NO_MEMORY;
                 ap->help = tmp;
-                ap->helpcap = newcap; /* make sure the end of '\0' */
+                ap->hcap = newcap; /* make sure the end of '\0' */
         }
 
-        n = vsnprintf(ap->help + ap->helplen, ap->helpcap - ap->helplen, fmt, va1);
+        n = vsnprintf(ap->help + ap->hlen, ap->hcap - ap->hlen, fmt, va1);
         va_end(va1);
 
         if (n >= 0) {
-                ap->helplen += n;
-                ap->help[ap->helplen] = '\0';
+                ap->hlen += n;
+                ap->help[ap->hlen] = '\0';
         }
 
 out:
@@ -897,22 +897,22 @@ const char *argparse_help(struct argparse *ap)
         if (ap->help)
                 return ap->help;
 
-        append_help(ap, "Usage: \n");
+        _append_help(ap, "Usage: \n");
 
         if (!(ap->stat_flags & A_CMD) && ap->cmd_next) {
-                append_help(ap, "  %s <commands> [options] [args]\n\n", ap->name);
-                append_help(ap, "Commands:\n");
+                _append_help(ap, "  %s <commands> [options] [args]\n\n", ap->name);
+                _append_help(ap, "Commands:\n");
 
                 next = ap->cmd_next;
                 while (next) {
-                        append_help(ap, "  %-18s %s\n", next->name, next->cmd_desc);
+                        _append_help(ap, "  %-18s %s\n", next->name, next->cmd_desc);
                         next = next->cmd_next;
                 }
 
-                append_help(ap, "\nGlobal options:\n");
+                _append_help(ap, "\nGlobal options:\n");
         } else {
-                append_help(ap, "  %s [options] [args]\n\n", ap->name);
-                append_help(ap, "Options:\n");
+                _append_help(ap, "  %s [options] [args]\n\n", ap->name);
+                _append_help(ap, "Options:\n");
         }
 
         for (uint32_t i = 0; i < ptrvec_count(&ap->opt_vec); i++) {
@@ -945,21 +945,21 @@ const char *argparse_help(struct argparse *ap)
                 }
 
                 opt_buf[pos] = '\0';
-                append_help(ap, "  %-18s", opt_buf);
+                _append_help(ap, "  %-18s", opt_buf);
 
                 if (op_hdr->view.help)
-                        append_help(ap, " %s\n", op_hdr->view.help);
+                        _append_help(ap, " %s\n", op_hdr->view.help);
         }
 
-        append_help(ap, "\n");
+        _append_help(ap, "\n");
 
         if (ap->cmd_next) {
-                append_help(ap, "Run `%s <command> --help` for more information.", ap->name);
+                _append_help(ap, "Run `%s <command> --help` for more information.", ap->name);
         } else {
-                append_help(ap, "Run `%s --help` for more information.", ap->name);
+                _append_help(ap, "Run `%s --help` for more information.", ap->name);
         }
 
-        append_help(ap, "\n");
+        _append_help(ap, "\n");
 
         return ap->help;
 }
