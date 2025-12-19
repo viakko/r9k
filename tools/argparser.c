@@ -201,10 +201,10 @@ static int store_position_val(struct argparser *ap, const char *val)
 }
 
 static int store_option_val(struct argparser *ap,
-                                           struct option_hdr *op_hdr,
-                                           int is_long,
-                                           char *tok,
-                                           const char *val)
+                            struct option_hdr *op_hdr,
+                            int is_long,
+                            char *tok,
+                            const char *val)
 {
         if (op_hdr->pub.nval > op_hdr->_maxval) {
                 _error(ap, "%s%s option value out of %d", OPT_PREFIX(is_long), tok, op_hdr->_maxval);
