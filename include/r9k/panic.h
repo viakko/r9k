@@ -10,6 +10,7 @@
 #include <stdarg.h>
 #include <r9k/compiler_attrs.h>
 
+__attr_noreturn
 __attr_printf(1, 2)
 static void _panic(const char *fmt, ...)
 {
