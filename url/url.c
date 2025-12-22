@@ -162,9 +162,9 @@ int main(int argc, char* argv[])
         ap = argparse_create("url", "1.0");
         PANIC_IF(!ap, "argparse initialize failed");
 
-        argparse_cmd_register(ap, "encode", "encode url", NULL, url_encode);
-        argparse_cmd_register(ap, "decode", "decode url", NULL, url_decode);
-        argparse_cmd_register(ap, "qs", "parsing query parmaeters in url", NULL, url_query);
+        argparse_cmd(ap, "encode", "encode url", NULL, url_encode);
+        argparse_cmd(ap, "decode", "decode url", NULL, url_decode);
+        argparse_cmd(ap, "qs", "parsing query parmaeters in url", NULL, url_query);
 
         /* global option */
         argparse_add0(ap, &no_pretty, NULL, "no-pretty", "not format", NULL, 0);

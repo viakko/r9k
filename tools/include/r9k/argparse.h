@@ -106,7 +106,7 @@ int _builtin_argparse_callback_version(struct argparse *ap, struct option *opt);
 struct argparse *argparse_new(const char *name, const char *version); /* no builtin options. */
 struct argparse *argparse_create(const char *name, const char *version); /* builtin help and version options */
 /* Register subcommand of argparse */
-int argparse_cmd_register(struct argparse *parent,
+int argparse_cmd(struct argparse *parent,
                           const char *name,
                           const char *desc,
                           argparse_register_t reg,

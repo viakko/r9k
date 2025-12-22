@@ -563,7 +563,7 @@ struct argparse *argparse_create(const char *name, const char *version)
         return ap;
 }
 
-int argparse_cmd_register(struct argparse *parent,
+int argparse_cmd(struct argparse *parent,
                            const char *name,
                            const char *desc,
                            argparse_register_t reg,

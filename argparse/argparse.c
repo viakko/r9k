@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
         PANIC_IF(!ap, "argparse_create() failed");
 
         for (int i = 0; i < 8; i++)
-                argparse_cmd_register(ap, letters_AZ[i], letters_AZ[i], NULL, NULL);
+                argparse_cmd(ap, letters_AZ[i], letters_AZ[i], NULL, NULL);
 
         for (int i = 0; i < 16; i++) {
                 if (letters_az[i][0] == 'h')
