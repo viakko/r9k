@@ -218,16 +218,20 @@ static int store_option_val(struct argparse *ap,
                 op_hdr->_valcap = INIT_VAL_CAP;
                 op_hdr->view.nval = 0;
                 op_hdr->view.vals = calloc(op_hdr->_valcap, sizeof(char *));
-                if (!op_hdr->view.vals)
+                if (!op_hdr->view.vals) {
+                        error_rec(ap, "out of memory");
                         return A_ERROR_NO_MEMORY;
+                }
         }
 
         if (op_hdr->view.nval >= op_hdr->_valcap) {
                 const char **tmp_vals;
                 op_hdr->_valcap *= 2;
                 tmp_vals = realloc(op_hdr->view.vals, sizeof(char *) * op_hdr->_valcap);
-                if (!tmp_vals)
+                if (!tmp_vals) {
+                        error_rec(ap, "out of memory");
                         return A_ERROR_NO_MEMORY;
+                }
 
                 op_hdr->view.vals = tmp_vals;
         }
@@ -634,8 +638,10 @@ int _argparse_addn_impl(struct argparse *ap,
         int r;
         struct option_hdr *op_hdr;
 
-        if (ap->stat_flags & A_RUN)
+        if (ap->stat_flags & A_RUN) {
+                error_rec(ap, "after call argparse_run()");
                 return A_ERROR_AFTER_RUN;
+        }
 
         check_warn_exists(ap, longopt, shortopt);
 
@@ -647,7 +653,7 @@ int _argparse_addn_impl(struct argparse *ap,
 
         op_hdr = calloc(1, sizeof(*op_hdr));
         if (!op_hdr) {
-                error_rec(ap, "after call argparse_run()");
+                error_rec(ap, "out of memory");
                 return A_ERROR_NO_MEMORY;
         }
 
@@ -804,6 +810,10 @@ static int _builtin_argparse_run(struct argparse *ap, int argc, char *argv[]) //
 
 out:
         ptrvec_free(&arg_vec);
+
+        if (r == A_ERROR_NO_MEMORY)
+                error_rec(ap, "out of memory");
+
         return r;
 }
 
@@ -871,8 +881,10 @@ static ssize_t _append_help(struct argparse *ap, const char *fmt, ...) // NOLINT
                 char *tmp;
                 size_t newcap = (ap->hcap * 2) + n + 1;
                 tmp = realloc(ap->help, newcap);
-                if (!tmp)
+                if (!tmp) {
+                        error_rec(ap, "out of memory");
                         return A_ERROR_NO_MEMORY;
+                }
                 ap->help = tmp;
                 ap->hcap = newcap; /* make sure the end of '\0' */
         }
