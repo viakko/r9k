@@ -107,10 +107,10 @@ struct argparse *argparse_new(const char *name, const char *version); /* no buil
 struct argparse *argparse_create(const char *name, const char *version); /* builtin help and version options */
 /* Register subcommand of argparse */
 int argparse_cmd(struct argparse *parent,
-                          const char *name,
-                          const char *desc,
-                          argparse_register_t reg,
-                          argparse_cmd_callback_t cb);
+                 const char *name,
+                 const char *desc,
+                 argparse_register_t reg,
+                 argparse_cmd_callback_t cb);
 void argparse_free(struct argparse *ap);
 
 /* Add options to argparse.

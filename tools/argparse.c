@@ -564,10 +564,10 @@ struct argparse *argparse_create(const char *name, const char *version)
 }
 
 int argparse_cmd(struct argparse *parent,
-                           const char *name,
-                           const char *desc,
-                           argparse_register_t reg,
-                           argparse_cmd_callback_t cb)
+                 const char *name,
+                 const char *desc,
+                 argparse_register_t reg,
+                 argparse_cmd_callback_t cb)
 {
         if (!parent)
                 return A_ERROR_NULL_PARENT;
