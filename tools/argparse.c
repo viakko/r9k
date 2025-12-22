@@ -9,9 +9,9 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define LONG    1
-#define SHORT   0
-#define INITCAP 16
+#define INIT_VEC_CAP 8
+#define INIT_VAL_CAP 1
+#define INIT_ERR_CAP 512
 
 #define A_CMD   (1 << 1)
 #define A_RUN   (1 << 2)
@@ -30,12 +30,12 @@ struct ptrvec
 
 static int ptrvec_init(struct ptrvec *p_vec)
 {
-        p_vec->items = calloc(INITCAP, sizeof(void *));
+        p_vec->items = calloc(INIT_VEC_CAP, sizeof(void *));
         if (!p_vec->items)
                 return A_ERROR_NO_MEMORY;
 
         p_vec->count = 0;
-        p_vec->cap   = INITCAP;
+        p_vec->cap   = INIT_VEC_CAP;
 
         return A_OK;
 }
@@ -62,7 +62,7 @@ static void *ptrvec_fetch(struct ptrvec *vec, size_t index)
 static int ptrvec_push_back(struct ptrvec *vec, void *items)
 {
         if (vec->count >= vec->cap) {
-                size_t newcap = vec->cap ? vec->cap * 2 : INITCAP;
+                size_t newcap = vec->cap ? vec->cap * 2 : INIT_VEC_CAP;
                 void **newdata = realloc(vec->items, newcap * sizeof(void *));
                 if (!newdata)
                         return A_ERROR_NO_MEMORY;
@@ -108,7 +108,7 @@ struct argparse
         struct argparse *cmd_tail;
 
         /* buff */
-        char error[1024];
+        char error[INIT_ERR_CAP];
         char *help;
         size_t hlen;
         size_t hcap;
@@ -215,7 +215,7 @@ static int store_option_val(struct argparse *ap,
         }
 
         if (!op_hdr->view.vals) {
-                op_hdr->_valcap = 16;
+                op_hdr->_valcap = INIT_VAL_CAP;
                 op_hdr->view.nval = 0;
                 op_hdr->view.vals = calloc(op_hdr->_valcap, sizeof(char *));
                 if (!op_hdr->view.vals)
@@ -339,7 +339,7 @@ static int handle_short_concat(struct argparse *ap, char *tok, int *i, char *arg
                 if (len > 1)
                         defval = tok + 1;
 
-                int r = try_take_val(ap, op_hdr, SHORT, short_char_tmp, defval, i, argv);
+                int r = try_take_val(ap, op_hdr, false, short_char_tmp, defval, i, argv);
                 if (r < 0)
                         return r;
 
@@ -366,7 +366,7 @@ static int handle_short_assign(struct argparse *ap, char *tok, int *i, char *arg
 
                 op_hdr = find_hdr_option(ap, name);
                 if (op_hdr != NULL) {
-                        r = try_take_val(ap, op_hdr, SHORT, name, eqval, i, argv);
+                        r = try_take_val(ap, op_hdr, false, name, eqval, i, argv);
                         return r < 0 ? r : 1;
                 }
 
@@ -381,7 +381,7 @@ static int handle_short_assign(struct argparse *ap, char *tok, int *i, char *arg
         /* no equal signs */
         op_hdr = find_hdr_option(ap, tok);
         if (op_hdr != NULL) {
-                r = try_take_val(ap, op_hdr, SHORT, tok, eqval, i, argv);
+                r = try_take_val(ap, op_hdr, false, tok, eqval, i, argv);
                 return r < 0 ? r : 1;
         }
 
@@ -422,7 +422,7 @@ static int handle_short_group(struct argparse *ap, char *tok, int *i, char *argv
 
                 short_char_tmp[0] = tok[k];
 
-                int r = try_take_val(ap, op_hdr, SHORT, short_char_tmp, NULL, i, argv);
+                int r = try_take_val(ap, op_hdr, false, short_char_tmp, NULL, i, argv);
                 if (r < 0)
                         return r;
 
@@ -479,7 +479,7 @@ static int handle_long(struct argparse *ap, int *i, char *tok, char *argv[])
                         return A_ERROR_UNKNOWN_OPT;
                 }
 
-                r = try_take_val(ap, op_hdr, LONG, name, eqval, i, argv);
+                r = try_take_val(ap, op_hdr, true, name, eqval, i, argv);
                 return r < 0 ? r : 0;
         }
 
@@ -490,7 +490,7 @@ static int handle_long(struct argparse *ap, int *i, char *tok, char *argv[])
                 return A_ERROR_UNKNOWN_OPT;
         }
 
-        r = try_take_val(ap, op_hdr, LONG, tok, eqval, i, argv);
+        r = try_take_val(ap, op_hdr, true, tok, eqval, i, argv);
         return r < 0 ? r : 0;
 }
 
