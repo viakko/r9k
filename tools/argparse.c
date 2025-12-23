@@ -625,15 +625,38 @@ void argparse_free(struct argparse *ap)
         free(ap);
 }
 
-int _argparse_addn_impl(struct argparse *ap,
-                        struct option **result_slot,
-                        const char *shortopt,
-                        const char *longopt,
-                        const char *help,
-                        const char *metavar,
-                        int maxval,
-                        argparse_callback_t cb,
-                        uint32_t flags)
+int argparse_add0(struct argparse *ap,
+                  struct option **result_slot,
+                  const char *shortopt,
+                  const char *longopt,
+                  const char *help,
+                  argparse_callback_t cb,
+                  uint32_t flags)
+{
+        return argparse_addn(ap, result_slot, shortopt, longopt, help, NULL, 0, cb, flags);
+}
+
+int argparse_add1(struct argparse *ap,
+                  struct option **result_slot,
+                  const char *shortopt,
+                  const char *longopt,
+                  const char *help,
+                  const char *metavar,
+                  argparse_callback_t cb,
+                  uint32_t flags)
+{
+        return argparse_addn(ap, result_slot, shortopt, longopt, help, metavar, 1, cb, flags);
+}
+
+int argparse_addn(struct argparse *ap,
+                  struct option **result_slot,
+                  const char *shortopt,
+                  const char *longopt,
+                  const char *help,
+                  const char *metavar,
+                  int maxval,
+                  argparse_callback_t cb,
+                  uint32_t flags)
 {
         int r;
         struct option_hdr *op_hdr;

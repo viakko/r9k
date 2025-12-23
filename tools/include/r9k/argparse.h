@@ -117,24 +117,9 @@ void argparse_free(struct argparse *ap);
  * Set NULL for unused short or long name, but at least one must be provided.
  * Default no argument option can merge to one option for short name.
  * Short option group only last one option can accept parameter. */
-int _argparse_addn_impl(struct argparse *ap, // NOLINT(*-reserved-identifier)
-                        struct option **result_slot,
-                        const char *shortopt,
-                        const char *longopt,
-                        const char *help,
-                        const char *metavar,
-                        int maxval,
-                        argparse_callback_t cb,
-                        uint32_t flags); /* n argument */
-
-#define argparse_add0(ap, slot, shortopt, longopt, help, cb, flags) \
-        _argparse_addn_impl(ap, slot, shortopt, longopt, help, NULL, 0, cb, flags)
-
-#define argparse_add1(ap, slot, shortopt, longopt, help, metavar, cb, flags) \
-        _argparse_addn_impl(ap, slot, shortopt, longopt, help, metavar, 1, cb, flags)
-
-#define argparse_addn(ap, slot, shortopt, longopt, help, metavar, maxval, cb, flags) \
-        _argparse_addn_impl(ap, slot, shortopt, longopt, help, metavar, maxval, cb, flags)
+int argparse_add0(struct argparse *ap, struct option **result_slot, const char *shortopt, const char *longopt, const char *help, argparse_callback_t cb, uint32_t flags); /* flag */
+int argparse_add1(struct argparse *ap, struct option **result_slot, const char *shortopt, const char *longopt, const char *help, const char *metavar, argparse_callback_t cb, uint32_t flags); /* 1 argument */
+int argparse_addn(struct argparse *ap, struct option **result_slot, const char *shortopt, const char *longopt, const char *help, const char *metavar, int maxval, argparse_callback_t cb, uint32_t flags); /* n argument */
 
 /* Register a new mutually exclusive group.
  * Each call to this macro creates an independent group.
