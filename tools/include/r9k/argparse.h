@@ -68,13 +68,13 @@
 #define A_ERROR_NO_MEMORY       (-0x0005) /* allocate memory failed */
 #define A_ERROR_INVALID_GROUP   (-0x0006) /* invalid option group */
 #define A_ERROR_MULTI_VAL_OPTS  (-0x0007) /* multiple consumes option in the group */
-#define A_ERROR_NULL_PARENT     (-0x0009) /* sub command no parent */
-#define A_ERROR_CREATE_FAIL     (-0x0010) /* create argparse fail */
-#define A_ERROR_CALLBACK_FAIL   (-0x0011) /* callback execute fail */
-#define A_ERROR_NULL_ARGPARSER  (-0x0012) /* null argparse instance */
-#define A_ERROR_SUBCOMMAND_CALL (-0x0013) /* call subcommand error */
-#define A_ERROR_NO_ARG_ACCEPT   (-0x0014) /* equal signs need value */
-#define A_ERROR_AFTER_RUN       (-0x0015) /* double call argparse_run() */
+#define A_ERROR_NULL_PARENT     (-0x0008) /* sub command no parent */
+#define A_ERROR_CREATE_FAIL     (-0x0009) /* create argparse fail */
+#define A_ERROR_CALLBACK_FAIL   (-0x0010) /* callback execute fail */
+#define A_ERROR_NULL_ARGPARSER  (-0x0011) /* null argparse instance */
+#define A_ERROR_SUBCOMMAND_CALL (-0x0012) /* call subcommand error */
+#define A_ERROR_NO_ARG_ACCEPT   (-0x0013) /* equal signs need value */
+#define A_ERROR_AFTER_RUN       (-0x0014) /* double call argparse_run() */
 
 #define A_CALLBACK_HELP _argparse_callback_help
 #define A_CALLBACK_VERSION _argparse_callback_version
@@ -106,11 +106,7 @@ int _argparse_callback_version(struct argparse *ap, struct option *opt); // NOLI
 struct argparse *argparse_new(const char *name, const char *version); /* no builtin options. */
 struct argparse *argparse_create(const char *name, const char *version); /* builtin help and version options */
 /* Register subcommand of argparse */
-int argparse_cmd(struct argparse *parent,
-                 const char *name,
-                 const char *desc,
-                 argparse_register_t reg,
-                 argparse_cmd_callback_t cb);
+int argparse_cmd(struct argparse *parent, const char *name, const char *desc, argparse_register_t reg, argparse_cmd_callback_t cb);
 void argparse_free(struct argparse *ap);
 
 /* Add options to argparse.

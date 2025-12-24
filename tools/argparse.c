@@ -13,8 +13,8 @@
 #define INIT_VAL_CAP 1
 #define INIT_ERR_CAP 512
 
-#define A_CMD   (1 << 1)
-#define A_RUN   (1 << 2)
+#define A_STAT_CMD  (1 << 1)
+#define A_STAT_RUN  (1 << 2)
 
 #define OPT_PREFIX(is_long) (is_long ? "--" : "-")
 
@@ -583,7 +583,7 @@ int argparse_cmd(struct argparse *parent,
         if (!ap)
                 return A_ERROR_CREATE_FAIL;
 
-        ap->stat_flags |= A_CMD;
+        ap->stat_flags |= A_STAT_CMD;
         ap->cmd_desc = desc;
         ap->cmd_callback = cb;
 
@@ -662,7 +662,7 @@ int argparse_addn(struct argparse *ap,
         int r;
         struct option_hdr *op_hdr;
 
-        if (ap->stat_flags & A_RUN) {
+        if (ap->stat_flags & A_STAT_RUN) {
                 error_rec(ap, "after call argparse_run()");
                 return A_ERROR_AFTER_RUN;
         }
@@ -747,8 +747,7 @@ void _argparse_mutual_exclude(struct argparse *ap, ...)
         va_end(va);
 }
 
-// NOLINTNEXTLINE(misc-no-recursion)
-static int _argparse_run(struct argparse *ap, int argc, char *argv[]) // NOLINT(*-reserved-identifier)
+static int _argparse_run(struct argparse *ap, int argc, char *argv[])
 {
         int r;
         int i = 1;
@@ -756,14 +755,14 @@ static int _argparse_run(struct argparse *ap, int argc, char *argv[]) // NOLINT(
         struct argparse *cmd = NULL;
         bool terminator = false;
 
-        if (ap->stat_flags & A_RUN) {
+        if (ap->stat_flags & A_STAT_RUN) {
                 error_rec(ap, "already call argparse_run()");
                 r = A_ERROR_AFTER_RUN;
                 goto out;
         }
 
         /* mark already calls run */
-        ap->stat_flags |= A_RUN;
+        ap->stat_flags |= A_STAT_RUN;
 
         if (argv == NULL) {
                 r = A_ERROR_NO_MEMORY;
@@ -853,7 +852,7 @@ int argparse_run(struct argparse *ap, int argc, char *argv[])
         if (!ap)
                 return A_ERROR_NULL_ARGPARSER;
 
-        if (ap->stat_flags & A_CMD) {
+        if (ap->stat_flags & A_STAT_CMD) {
                 error_rec(ap, "not allow sub argparse call argparse_run()");
                 return A_ERROR_SUBCOMMAND_CALL;
         }
@@ -942,7 +941,7 @@ const char *argparse_help(struct argparse *ap)
 
         _append_help(ap, "Usage: \n");
 
-        if (!(ap->stat_flags & A_CMD) && ap->cmd_next) {
+        if (!(ap->stat_flags & A_STAT_CMD) && ap->cmd_next) {
                 _append_help(ap, "  %s <commands> [options] [args]\n\n", ap->name);
                 _append_help(ap, "Commands:\n");
 
