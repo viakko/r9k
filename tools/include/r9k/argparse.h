@@ -56,25 +56,26 @@
 #include <stdint.h>
 
 /* option flags */
-#define O_REQUIRED              (1 << 1) /* required value */
-#define O_CONCAT                (1 << 2) /* allow arguments like: -O1 -O2 */
-#define O_NOGROUP               (1 << 3) /* not allow a group */
+#define O_REQUIRED              (1 << 1)  /* required value */
+#define O_CONCAT                (1 << 2)  /* allow arguments like: -O1 -O2 */
+#define O_NOGROUP               (1 << 3)  /* not allow a group */
 
-#define A_OK                    (-0x0000)
-#define A_ERROR_REQUIRED_VAL    (-0x0001)
-#define A_ERROR_UNKNOWN_OPT     (-0x0002)
-#define A_ERROR_TOO_MANY_VAL    (-0x0003)
-#define A_ERROR_CONFLICT        (-0x0004)
-#define A_ERROR_NO_MEMORY       (-0x0005)
-#define A_ERROR_INVALID_GROUP   (-0x0006)
-#define A_ERROR_MULTI_VAL_OPTS  (-0x0007)
-#define A_ERROR_NULL_PARENT     (-0x0009)
-#define A_ERROR_CREATE_FAIL     (-0x0010)
-#define A_ERROR_CALLBACK_FAIL   (-0x0011)
-#define A_ERROR_NULL_ARGPARSER  (-0x0012)
-#define A_ERROR_SUBCOMMAND_CALL (-0x0013)
-#define A_ERROR_NO_ARG_ACCEPT   (-0x0014)
-#define A_ERROR_AFTER_RUN       (-0x0015)
+#define A_OK                    (-0x0000) /* return ok */
+#define A_EXIT_OK               (-0x0001) /* exit after execute callback */
+#define A_ERROR_REQUIRED_VAL    (-0x0002) /* option required value */
+#define A_ERROR_UNKNOWN_OPT     (-0x0003) /* unknown options */
+#define A_ERROR_TOO_MANY_VAL    (-0x0004) /* option too many values */
+#define A_ERROR_CONFLICT        (-0x0005) /* option conflict */
+#define A_ERROR_NO_MEMORY       (-0x0006) /* allocate memory failed */
+#define A_ERROR_INVALID_GROUP   (-0x0007) /* invalid option group */
+#define A_ERROR_MULTI_VAL_OPTS  (-0x0009) /* multiple consumes option in the group */
+#define A_ERROR_NULL_PARENT     (-0x0010) /* sub command no parent */
+#define A_ERROR_CREATE_FAIL     (-0x0011) /* create argparse fail */
+#define A_ERROR_CALLBACK_FAIL   (-0x0012) /* callback execute fail */
+#define A_ERROR_NULL_ARGPARSER  (-0x0013) /* null argparse instance */
+#define A_ERROR_SUBCOMMAND_CALL (-0x0014) /* call subcommand error */
+#define A_ERROR_NO_ARG_ACCEPT   (-0x0015) /* equal signs need value */
+#define A_ERROR_AFTER_RUN       (-0x0016) /* double call argparse_run() */
 
 #define A_CALLBACK_HELP _argparse_callback_help
 #define A_CALLBACK_VERSION _argparse_callback_version

@@ -27,10 +27,10 @@ static int print_callback(struct argparse *ap, struct option *opt)
 
         pclose(fp);
 
-        exit(0);
+        return A_EXIT_OK;
 }
 
-static int clipboard_write(struct argparse *ap)
+static void clipboard_write(struct argparse *ap)
 {
         __attr_ignore(ap);
 
@@ -49,8 +49,6 @@ static int clipboard_write(struct argparse *ap)
 
         free(buf);
         pclose(fp);
-
-        return A_OK;
 }
 
 int main(int argc, char *argv[])
@@ -58,13 +56,13 @@ int main(int argc, char *argv[])
         struct argparse *ap;
 
         ap = argparse_create("clip", "1.0");
-        PANIC_IF(!ap, "argparse initialize failed");
+        PANIC_IF(!ap, "error: argparse initialize failed");
 
         argparse_add0(ap, NULL, "print", NULL, "read ontents in clipboard", print_callback, 0);
         argparse_add0(ap, NULL, "q", "quiet", "quiet write to clipboard", NULL, 0);
 
         if (argparse_run(ap, argc, argv) != A_OK)
-                PANIC("%s\n", argparse_error(ap));
+                PANIC("error: %s\n", argparse_error(ap));
 
         /* default call write */
         clipboard_write(ap);
