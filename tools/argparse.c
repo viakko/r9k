@@ -94,7 +94,7 @@ struct argparse
 {
         const char *name;
         const char *version;
-        int stat_flags;
+        int _stat_flags;
 
         /* options */
         struct ptrvec opt_vec;
@@ -583,7 +583,7 @@ int argparse_cmd(struct argparse *parent,
         if (!ap)
                 return A_ERROR_CREATE_FAIL;
 
-        ap->stat_flags |= A_STAT_CMD;
+        ap->_stat_flags |= A_STAT_CMD;
         ap->cmd_desc = desc;
         ap->cmd_callback = cb;
 
@@ -662,7 +662,7 @@ int argparse_addn(struct argparse *ap,
         int r;
         struct option_hdr *op_hdr;
 
-        if (ap->stat_flags & A_STAT_RUN) {
+        if (ap->_stat_flags & A_STAT_RUN) {
                 error_rec(ap, "after call argparse_run()");
                 return A_ERROR_AFTER_RUN;
         }
@@ -755,14 +755,14 @@ static int _argparse_run(struct argparse *ap, int argc, char *argv[])
         struct argparse *cmd = NULL;
         bool terminator = false;
 
-        if (ap->stat_flags & A_STAT_RUN) {
+        if (ap->_stat_flags & A_STAT_RUN) {
                 error_rec(ap, "already call argparse_run()");
                 r = A_ERROR_AFTER_RUN;
                 goto out;
         }
 
         /* mark already calls run */
-        ap->stat_flags |= A_STAT_RUN;
+        ap->_stat_flags |= A_STAT_RUN;
 
         if (argv == NULL) {
                 r = A_ERROR_NO_MEMORY;
@@ -852,7 +852,7 @@ int argparse_run(struct argparse *ap, int argc, char *argv[])
         if (!ap)
                 return A_ERROR_NULL_ARGPARSER;
 
-        if (ap->stat_flags & A_STAT_CMD) {
+        if (ap->_stat_flags & A_STAT_CMD) {
                 error_rec(ap, "not allow sub argparse call argparse_run()");
                 return A_ERROR_SUBCOMMAND_CALL;
         }
@@ -941,7 +941,7 @@ const char *argparse_help(struct argparse *ap)
 
         _append_help(ap, "Usage: \n");
 
-        if (!(ap->stat_flags & A_STAT_CMD) && ap->cmd_next) {
+        if (!(ap->_stat_flags & A_STAT_CMD) && ap->cmd_next) {
                 _append_help(ap, "  %s <commands> [options] [args]\n\n", ap->name);
                 _append_help(ap, "Commands:\n");
 

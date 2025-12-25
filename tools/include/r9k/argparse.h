@@ -131,7 +131,6 @@ void _argparse_mutual_exclude(struct argparse *ap, ...); // NOLINT(*-reserved-id
 int argparse_run(struct argparse *ap, int argc, char *argv[]);
 const char *argparse_error(struct argparse *ap);
 struct option *argparse_has(struct argparse *ap, const char *name);
-int argparse_should_exit(struct argparse *ap);
 
 /* Get position values */
 uint32_t argparse_count(struct argparse *ap);
