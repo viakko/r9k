@@ -359,9 +359,13 @@ static int handle_short_assign(struct argparse *ap, char *tok, int *i, char *arg
 
         char *eq = strchr(tok, '=');
         if (eq) {
-                eqval = eq + 1;
-
                 size_t len = eq - tok;
+                if (len == 0) {
+                        error_rec(ap, "invalid option syntax: -%s (empty option name)", tok);
+                        return A_ERROR_INVALID_ARG;
+                }
+
+                eqval = eq + 1;
                 char name[len + 1];
                 memcpy(name, tok, len);
                 name[len] = '\0';
