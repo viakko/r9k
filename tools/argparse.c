@@ -550,8 +550,8 @@ struct argparse *argparse_create(const char *name, const char *version)
                 return NULL;
         }
 
-        argparse_add0(ap, &ap->opt_h, "h", "help", "show this help message.", A_CALLBACK_HELP, 0);
-        argparse_add0(ap, &ap->opt_v, "version", NULL, "show current version.", A_CALLBACK_VERSION, 0);
+        argparse_add0(ap, &ap->opt_h, "h", "help", "show this help message.", _argparse_callback_help, 0);
+        argparse_add0(ap, &ap->opt_v, "version", NULL, "show current version.", _argparse_callback_version, 0);
 
         return ap;
 }
@@ -735,38 +735,30 @@ void _argparse_mutual_exclude(struct argparse *ap, ...)
         va_end(va);
 }
 
-static int _argparse_run(struct argparse *ap, int argc, char *argv[])
+static int _argparse_sync_stat(struct argparse *ap)
 {
-        int r;
-        int i = 1;
-        char *tok = NULL;
-        struct argparse *cmd = NULL;
-        bool terminator = false;
-
         if (ap->_stat_flags & A_STAT_RUN) {
                 error_rec(ap, "already call argparse_run()");
-                r = A_ERROR_ALREADY_RUN;
-                goto out;
+                return A_ERROR_ALREADY_RUN;
         }
 
         /* mark already calls run */
         ap->_stat_flags |= A_STAT_RUN;
 
-        if (argv == NULL) {
-                r = A_ERROR_NO_MEMORY;
-                goto out;
-        }
+        return 0;
+}
 
-        /* sub command argv copy */
-        struct ptrvec args_copy;
-        if ((r = ptrvec_init(&args_copy)) != 0)
-                goto out;
-
-        if (!(ap->_stat_flags & A_STAT_CMD) && argc > 1 && (cmd = find_subcmd(ap, argv[1])) != NULL) {
-                i = 2; /* skip sub command */
-                if ((r = ptrvec_push_back(&args_copy, argv[1])) != 0)
-                        goto out;
-        }
+static int _argparse_dispatch(struct argparse *ap,
+                              struct argparse *cmd,
+                              struct ptrvec *args_copy,
+                              int start_index,
+                              int argc,
+                              char *argv[])
+{
+        int r = 0;
+        char *tok;
+        bool terminator = false;
+        int i = start_index;
 
         for (; i < argc; i++) {
                 tok = argv[i];
@@ -778,8 +770,8 @@ static int _argparse_run(struct argparse *ap, int argc, char *argv[])
 
                 if (terminator || tok[0] != '-') {
                         if (cmd) {
-                                if ((r = ptrvec_push_back(&args_copy, argv[i])) != 0)
-                                        goto out;
+                                if ((r = ptrvec_push_back(args_copy, argv[i])) != 0)
+                                        return r;
                         } else {
                                 store_position_val(ap, tok);
                         }
@@ -790,14 +782,14 @@ static int _argparse_run(struct argparse *ap, int argc, char *argv[])
                         tok += 2;
 
                         if (cmd && find_hdr_option(cmd, tok)) {
-                                if ((r = ptrvec_push_back(&args_copy, argv[i])) != 0)
-                                        goto out;
+                                if ((r = ptrvec_push_back(args_copy, argv[i])) != 0)
+                                        return r;
                                 continue;
                         }
 
                         r = handle_long(ap, &i, tok, argv);
                         if (r != 0)
-                                goto out;
+                                return r;
 
                         continue;
                 }
@@ -805,27 +797,56 @@ static int _argparse_run(struct argparse *ap, int argc, char *argv[])
                 tok++; /* skip '-' */
 
                 if (cmd && find_hdr_option(cmd, tok)) {
-                        if ((r = ptrvec_push_back(&args_copy, argv[i])) != 0)
-                                goto out;
+                        if ((r = ptrvec_push_back(args_copy, argv[i])) != 0)
+                                return r;
                         continue;
                 }
 
                 r = handle_short(ap, &i, tok, argv);
                 if (r != 0)
+                        return r;
+        }
+
+        return r;
+}
+
+static int _argparse_run(struct argparse *ap, int argc, char *argv[])
+{
+        int r;
+        int i = 1; /* skip self */
+        struct argparse *cmd = NULL;
+
+        _argparse_sync_stat(ap);
+
+        if (!ap || !argv || argc <= 0)
+                return A_ERROR_INVALID_ARG;
+
+        /* sub command argv copy */
+        struct ptrvec args_copy;
+        if ((r = ptrvec_init(&args_copy)) != 0)
+                goto out;
+
+        if (argc > 1 && (cmd = find_subcmd(ap, argv[1])) != NULL) {
+                i = 2; /* skip sub command */
+                if ((r = ptrvec_push_back(&args_copy, argv[1])) != 0)
                         goto out;
         }
+
+        r = _argparse_dispatch(ap, cmd, &args_copy, i, argc, argv);
+        if (r != 0)
+                goto out;
 
         /* if include cmd parsing for sub command. */
         if (cmd) {
                 if ((r = _argparse_run(cmd, (int) ptrvec_count(&args_copy), (char **) args_copy.items)) != 0) {
                         snprintf(ap->error, sizeof(ap->error), "%s", cmd->error);
-                        goto out;
+                        return r;
                 }
 
                 r = cmd->cmd_callback(cmd);
                 if (r != 0) {
                         error_rec(ap, "%s: callback fail", cmd->name);
-                        goto out;
+                        return r;
                 }
         }
 
@@ -988,7 +1009,7 @@ const char *argparse_help(struct argparse *ap)
 
         _append_help(ap, "\n");
 
-        if (ap->cmd_next) {
+        if (ap->_stat_flags & A_STAT_CMD) {
                 _append_help(ap, "Run `%s <command> --help` for more information.", ap->name);
         } else {
                 _append_help(ap, "Run `%s --help` for more information.", ap->name);

@@ -59,27 +59,25 @@
 #include <stdint.h>
 
 /* option flags */
-#define O_REQUIRED              (1 << 1)  /* required value */
-#define O_CONCAT                (1 << 2)  /* allow arguments like: -O1 -O2 */
-#define O_NOGROUP               (1 << 3)  /* not allow a group */
+#define O_REQUIRED              (1 << 1) /* required value */
+#define O_CONCAT                (1 << 2) /* allow arguments like: -O1 -O2 */
+#define O_NOGROUP               (1 << 3) /* not allow a group */
 
-#define A_ERROR_REQUIRED_VAL    (-0x0001) /* option required value */
-#define A_ERROR_UNKNOWN_OPT     (-0x0002) /* unknown options */
-#define A_ERROR_TOO_MANY_VAL    (-0x0003) /* option too many values */
-#define A_ERROR_CONFLICT        (-0x0004) /* option conflict */
-#define A_ERROR_NO_MEMORY       (-0x0005) /* allocate memory failed */
-#define A_ERROR_INVALID_GROUP   (-0x0006) /* invalid option group */
-#define A_ERROR_MULTI_VAL_OPTS  (-0x0007) /* multiple consumes option in the group */
-#define A_ERROR_NULL_PARENT     (-0x0008) /* sub command no parent */
-#define A_ERROR_CREATE_FAIL     (-0x0009) /* create argparse fail */
-#define A_ERROR_CALLBACK_FAIL   (-0x0010) /* callback execute fail */
-#define A_ERROR_NULL_ARGPARSER  (-0x0011) /* null argparse instance */
-#define A_ERROR_SUBCOMMAND_CALL (-0x0012) /* call subcommand error */
-#define A_ERROR_NO_ARG_ACCEPT   (-0x0013) /* equal signs need value */
-#define A_ERROR_ALREADY_RUN     (-0x0014) /* double call argparse_run() */
-
-#define A_CALLBACK_HELP _argparse_callback_help
-#define A_CALLBACK_VERSION _argparse_callback_version
+#define A_ERROR_REQUIRED_VAL    (  -101) /* option required value */
+#define A_ERROR_UNKNOWN_OPT     (  -102) /* unknown options */
+#define A_ERROR_TOO_MANY_VAL    (  -103) /* option too many values */
+#define A_ERROR_CONFLICT        (  -104) /* option conflict */
+#define A_ERROR_NO_MEMORY       (  -105) /* allocate memory failed */
+#define A_ERROR_INVALID_GROUP   (  -106) /* invalid option group */
+#define A_ERROR_MULTI_VAL_OPTS  (  -107) /* multiple consumes option in the group */
+#define A_ERROR_NULL_PARENT     (  -108) /* sub command no parent */
+#define A_ERROR_CREATE_FAIL     (  -109) /* create argparse fail */
+#define A_ERROR_CALLBACK_FAIL   (  -110) /* callback execute fail */
+#define A_ERROR_NULL_ARGPARSER  (  -111) /* null argparse instance */
+#define A_ERROR_SUBCOMMAND_CALL (  -112) /* call subcommand error */
+#define A_ERROR_NO_ARG_ACCEPT   (  -113) /* equal signs need value */
+#define A_ERROR_ALREADY_RUN     (  -114) /* double call argparse_run() */
+#define A_ERROR_INVALID_ARG     (  -115) /* invalid arguments */
 
 struct argparse;
 struct option;
@@ -99,10 +97,6 @@ struct option
         uint32_t     nval;              /* number of values consumed */
         const char** vals;              /* array of consumed values, in parse order */
 };
-
-/* EXECUTE AND EXIT */
-int _argparse_callback_help(struct argparse *ap, struct option *opt); // NOLINT(*-reserved-identifier)
-int _argparse_callback_version(struct argparse *ap, struct option *opt); // NOLINT(*-reserved-identifier)
 
 /* If a result doesn't equal to 0 that mean error. */
 struct argparse *argparse_create(const char *name, const char *version);
