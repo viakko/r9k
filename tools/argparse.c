@@ -762,7 +762,7 @@ static int _argparse_run(struct argparse *ap, int argc, char *argv[])
         if ((r = ptrvec_init(&args_copy)) != 0)
                 goto out;
 
-        if (argc > 1 && (cmd = find_subcmd(ap, argv[1])) != NULL) {
+        if (!(ap->_stat_flags & A_STAT_CMD) && argc > 1 && (cmd = find_subcmd(ap, argv[1])) != NULL) {
                 i = 2; /* skip sub command */
                 if ((r = ptrvec_push_back(&args_copy, argv[1])) != 0)
                         goto out;
@@ -777,7 +777,12 @@ static int _argparse_run(struct argparse *ap, int argc, char *argv[])
                 }
 
                 if (terminator || tok[0] != '-') {
-                        store_position_val(cmd ? cmd : ap, tok);
+                        if (cmd) {
+                                if ((r = ptrvec_push_back(&args_copy, argv[i])) != 0)
+                                        goto out;
+                        } else {
+                                store_position_val(ap, tok);
+                        }
                         continue;
                 }
 
