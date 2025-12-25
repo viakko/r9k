@@ -76,7 +76,7 @@
 #define A_ERROR_NULL_ARGPARSER  (-0x0011) /* null argparse instance */
 #define A_ERROR_SUBCOMMAND_CALL (-0x0012) /* call subcommand error */
 #define A_ERROR_NO_ARG_ACCEPT   (-0x0013) /* equal signs need value */
-#define A_ERROR_AFTER_RUN       (-0x0014) /* double call argparse_run() */
+#define A_ERROR_ALREADY_RUN     (-0x0014) /* double call argparse_run() */
 
 #define A_CALLBACK_HELP _argparse_callback_help
 #define A_CALLBACK_VERSION _argparse_callback_version

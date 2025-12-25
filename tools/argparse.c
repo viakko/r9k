@@ -97,12 +97,11 @@ struct argparse
         int _stat_flags;
 
         /* options */
-        struct ptrvec opt_vec;
-
+        struct ptrvec opts;
         /* position value */
-        struct ptrvec posval_vec;
+        struct ptrvec vals;
 
-        /* sub argparse */
+        /* sub command argparse */
         const char *cmd_desc;
         argparse_cmd_callback_t cmd_callback;
         struct argparse *cmd_next;
@@ -137,8 +136,8 @@ static struct argparse *find_subcmd(struct argparse *ap, const char *name)
 
 static struct option_hdr *find_hdr_slot(struct argparse *ap, struct option **slot)
 {
-        for (uint32_t i = 0; i < ptrvec_count(&ap->opt_vec); i++) {
-                struct option_hdr *op_hdr = ptrvec_fetch(&ap->opt_vec, i);
+        for (uint32_t i = 0; i < ptrvec_count(&ap->opts); i++) {
+                struct option_hdr *op_hdr = ptrvec_fetch(&ap->opts, i);
                 if (op_hdr->_slot == slot)
                         return op_hdr;
         }
@@ -158,8 +157,8 @@ static struct option_hdr *find_hdr_option(struct argparse *ap, const char *name)
         len = strlen(name);
         is_short_char = (name[1] == '\0');
 
-        for (uint32_t i = 0; i < ptrvec_count(&ap->opt_vec); i++) {
-                struct option_hdr *op_hdr = ptrvec_fetch(&ap->opt_vec, i);
+        for (uint32_t i = 0; i < ptrvec_count(&ap->opts); i++) {
+                struct option_hdr *op_hdr = ptrvec_fetch(&ap->opts, i);
 
                 lopt = op_hdr->view.longopt;
                 sopt = op_hdr->view.shortopt;
@@ -201,7 +200,7 @@ static uint32_t getmulid(struct argparse *ap)
 
 static int store_position_val(struct argparse *ap, char *val)
 {
-        return ptrvec_push_back(&ap->posval_vec, val);
+        return ptrvec_push_back(&ap->vals, val);
 }
 
 static int store_option_val(struct argparse *ap,
@@ -252,8 +251,8 @@ static struct option_hdr *is_mutual(struct argparse *ap, struct option_hdr *op_h
         if (op_hdr->_mulid == 0)
                 return NULL;
 
-        for (uint32_t i = 0; i < ptrvec_count(&ap->opt_vec); i++) {
-                ent = ptrvec_fetch(&ap->opt_vec, i);
+        for (uint32_t i = 0; i < ptrvec_count(&ap->opts); i++) {
+                ent = ptrvec_fetch(&ap->opts, i);
                 if (ent == op_hdr)
                         continue;
 
@@ -540,13 +539,13 @@ struct argparse *argparse_create(const char *name, const char *version)
         ap->_mulid = 1;
 
         /* options */
-        if (ptrvec_init(&ap->opt_vec) != 0) {
+        if (ptrvec_init(&ap->opts) != 0) {
                 argparse_destory(ap);
                 return NULL;
         }
 
         /* values */
-        if (ptrvec_init(&ap->posval_vec) != 0) {
+        if (ptrvec_init(&ap->vals) != 0) {
                 argparse_destory(ap);
                 return NULL;
         }
@@ -563,13 +562,13 @@ void argparse_destory(struct argparse *ap)
         if (!ap)
                 return;
 
-        for (uint32_t i = 0; i < ptrvec_count(&ap->opt_vec); i++) {
-                struct option_hdr *op_hdr = ptrvec_fetch(&ap->opt_vec, i);
+        for (uint32_t i = 0; i < ptrvec_count(&ap->opts); i++) {
+                struct option_hdr *op_hdr = ptrvec_fetch(&ap->opts, i);
                 free(op_hdr->view.vals);
                 *op_hdr->_slot = NULL;
                 free(op_hdr);
         }
-        ptrvec_free(&ap->opt_vec);
+        ptrvec_free(&ap->opts);
 
         if (ap->cmd_next)
                 argparse_destory(ap->cmd_next);
@@ -577,7 +576,7 @@ void argparse_destory(struct argparse *ap)
         if (ap->help)
                 free(ap->help);
 
-        ptrvec_free(&ap->posval_vec);
+        ptrvec_free(&ap->vals);
 
         free(ap);
 }
@@ -653,7 +652,7 @@ int argparse_addn(struct argparse *ap,
 
         if (ap->_stat_flags & A_STAT_RUN) {
                 error_rec(ap, "after call argparse_run()");
-                return A_ERROR_AFTER_RUN;
+                return A_ERROR_ALREADY_RUN;
         }
 
         check_warn_exists(ap, longopt, shortopt);
@@ -687,7 +686,7 @@ int argparse_addn(struct argparse *ap,
         if (longopt)
                 op_hdr->_long_len = strlen(longopt);
 
-        r = ptrvec_push_back(&ap->opt_vec, op_hdr);
+        r = ptrvec_push_back(&ap->opts, op_hdr);
         if (r != 0) {
                 free(op_hdr);
                 return r;
@@ -701,8 +700,8 @@ static int callback_exec(struct argparse *ap)
         int r;
         struct option_hdr *op_hdr;
 
-        for (uint32_t i = 0; i < ptrvec_count(&ap->opt_vec); i++) {
-                op_hdr = ptrvec_fetch(&ap->opt_vec, i);
+        for (uint32_t i = 0; i < ptrvec_count(&ap->opts); i++) {
+                op_hdr = ptrvec_fetch(&ap->opts, i);
                 if (*op_hdr->_slot != NULL && op_hdr->_cb != NULL) {
                         r = op_hdr->_cb(ap, &op_hdr->view);
                         if (r != 0)
@@ -746,7 +745,7 @@ static int _argparse_run(struct argparse *ap, int argc, char *argv[])
 
         if (ap->_stat_flags & A_STAT_RUN) {
                 error_rec(ap, "already call argparse_run()");
-                r = A_ERROR_AFTER_RUN;
+                r = A_ERROR_ALREADY_RUN;
                 goto out;
         }
 
@@ -759,13 +758,13 @@ static int _argparse_run(struct argparse *ap, int argc, char *argv[])
         }
 
         /* sub command argv copy */
-        struct ptrvec arg_vec;
-        if ((r = ptrvec_init(&arg_vec)) != 0)
+        struct ptrvec args_copy;
+        if ((r = ptrvec_init(&args_copy)) != 0)
                 goto out;
 
         if (argc > 1 && (cmd = find_subcmd(ap, argv[1])) != NULL) {
                 i = 2; /* skip sub command */
-                if ((r = ptrvec_push_back(&arg_vec, argv[1])) != 0)
+                if ((r = ptrvec_push_back(&args_copy, argv[1])) != 0)
                         goto out;
         }
 
@@ -786,7 +785,7 @@ static int _argparse_run(struct argparse *ap, int argc, char *argv[])
                         tok += 2;
 
                         if (cmd && find_hdr_option(cmd, tok)) {
-                                if ((r = ptrvec_push_back(&arg_vec, argv[i])) != 0)
+                                if ((r = ptrvec_push_back(&args_copy, argv[i])) != 0)
                                         goto out;
                                 continue;
                         }
@@ -801,7 +800,7 @@ static int _argparse_run(struct argparse *ap, int argc, char *argv[])
                 tok++; /* skip '-' */
 
                 if (cmd && find_hdr_option(cmd, tok)) {
-                        if ((r = ptrvec_push_back(&arg_vec, argv[i])) != 0)
+                        if ((r = ptrvec_push_back(&args_copy, argv[i])) != 0)
                                 goto out;
                         continue;
                 }
@@ -813,7 +812,7 @@ static int _argparse_run(struct argparse *ap, int argc, char *argv[])
 
         /* if include cmd parsing for sub command. */
         if (cmd) {
-                if ((r = _argparse_run(cmd, (int) ptrvec_count(&arg_vec), (char **) arg_vec.items)) != 0) {
+                if ((r = _argparse_run(cmd, (int) ptrvec_count(&args_copy), (char **) args_copy.items)) != 0) {
                         snprintf(ap->error, sizeof(ap->error), "%s", cmd->error);
                         goto out;
                 }
@@ -828,7 +827,7 @@ static int _argparse_run(struct argparse *ap, int argc, char *argv[])
         r = callback_exec(ap);
 
 out:
-        ptrvec_free(&arg_vec);
+        ptrvec_free(&args_copy);
 
         if (r == A_ERROR_NO_MEMORY)
                 error_rec(ap, "out of memory");
@@ -868,15 +867,15 @@ struct option *argparse_has(struct argparse *ap, const char *name)
 
 uint32_t argparse_count(struct argparse *ap)
 {
-        return ptrvec_count(&ap->posval_vec);
+        return ptrvec_count(&ap->vals);
 }
 
 const char *argparse_val(struct argparse *ap, uint32_t index)
 {
-        if (index >= ptrvec_count(&ap->posval_vec))
+        if (index >= ptrvec_count(&ap->vals))
                 return NULL;
 
-        return ptrvec_fetch(&ap->posval_vec, index);
+        return ptrvec_fetch(&ap->vals, index);
 }
 
 __attribute__((format(printf, 2, 3)))
@@ -946,8 +945,8 @@ const char *argparse_help(struct argparse *ap)
                 _append_help(ap, "Options:\n");
         }
 
-        for (uint32_t i = 0; i < ptrvec_count(&ap->opt_vec); i++) {
-                op_hdr = ptrvec_fetch(&ap->opt_vec, i);
+        for (uint32_t i = 0; i < ptrvec_count(&ap->opts); i++) {
+                op_hdr = ptrvec_fetch(&ap->opts, i);
                 char opt_buf[128] = "";
                 int pos = 0;
 
