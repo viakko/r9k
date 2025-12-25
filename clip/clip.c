@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
         /* default call write */
         clipboard_write(ap);
 
-        argparse_free(ap);
+        argparse_destory(ap);
 
         return 0;
 }

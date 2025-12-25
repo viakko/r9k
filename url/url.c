@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
         if (argparse_run(ap, argc, argv) != 0)
                 PANIC("%s\n", argparse_error(ap));
 
-        argparse_free(ap);
+        argparse_destory(ap);
 
         return 0;
 }

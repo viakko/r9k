@@ -541,13 +541,13 @@ struct argparse *argparse_create(const char *name, const char *version)
 
         /* options */
         if (ptrvec_init(&ap->opt_vec) != 0) {
-                argparse_free(ap);
+                argparse_destory(ap);
                 return NULL;
         }
 
         /* values */
         if (ptrvec_init(&ap->posval_vec) != 0) {
-                argparse_free(ap);
+                argparse_destory(ap);
                 return NULL;
         }
 
@@ -555,6 +555,31 @@ struct argparse *argparse_create(const char *name, const char *version)
         argparse_add0(ap, &ap->opt_v, "version", NULL, "show current version.", A_CALLBACK_VERSION, 0);
 
         return ap;
+}
+
+// NOLINTNEXTLINE(misc-no-recursion)
+void argparse_destory(struct argparse *ap)
+{
+        if (!ap)
+                return;
+
+        for (uint32_t i = 0; i < ptrvec_count(&ap->opt_vec); i++) {
+                struct option_hdr *op_hdr = ptrvec_fetch(&ap->opt_vec, i);
+                free(op_hdr->view.vals);
+                *op_hdr->_slot = NULL;
+                free(op_hdr);
+        }
+        ptrvec_free(&ap->opt_vec);
+
+        if (ap->cmd_next)
+                argparse_destory(ap->cmd_next);
+
+        if (ap->help)
+                free(ap->help);
+
+        ptrvec_free(&ap->posval_vec);
+
+        free(ap);
 }
 
 int argparse_cmd(struct argparse *parent,
@@ -588,31 +613,6 @@ int argparse_cmd(struct argparse *parent,
                 return reg(ap);
 
         return 0;
-}
-
-// NOLINTNEXTLINE(misc-no-recursion)
-void argparse_free(struct argparse *ap)
-{
-        if (!ap)
-                return;
-
-        for (uint32_t i = 0; i < ptrvec_count(&ap->opt_vec); i++) {
-                struct option_hdr *op_hdr = ptrvec_fetch(&ap->opt_vec, i);
-                free(op_hdr->view.vals);
-                *op_hdr->_slot = NULL;
-                free(op_hdr);
-        }
-        ptrvec_free(&ap->opt_vec);
-
-        if (ap->cmd_next)
-                argparse_free(ap->cmd_next);
-
-        if (ap->help)
-                free(ap->help);
-
-        ptrvec_free(&ap->posval_vec);
-
-        free(ap);
 }
 
 int argparse_add0(struct argparse *ap,
@@ -667,7 +667,7 @@ int argparse_addn(struct argparse *ap,
         /* Initialize the user option pointer to NULL,
          * If the user provides this option in command line,
          * the pointer will be updated to point to the actual option object.
-         * WARNING: This pointer becomes invalid after argparse_free(). */
+         * WARNING: This pointer becomes invalid after argparse_destory(). */
         if (!result_slot)
                 result_slot = &op_hdr->_self_ptr;
         *result_slot = NULL;
