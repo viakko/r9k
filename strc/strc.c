@@ -166,7 +166,7 @@ int main(int argc, char* argv[])
                 }
         }
 
-        argparse_destory(ap);
+        argparse_destroy(ap);
 
         return 0;
 }

@@ -540,13 +540,13 @@ struct argparse *argparse_create(const char *name, const char *version)
 
         /* options */
         if (ptrvec_init(&ap->opts) != 0) {
-                argparse_destory(ap);
+                argparse_destroy(ap);
                 return NULL;
         }
 
         /* values */
         if (ptrvec_init(&ap->vals) != 0) {
-                argparse_destory(ap);
+                argparse_destroy(ap);
                 return NULL;
         }
 
@@ -557,7 +557,7 @@ struct argparse *argparse_create(const char *name, const char *version)
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
-void argparse_destory(struct argparse *ap)
+void argparse_destroy(struct argparse *ap)
 {
         if (!ap)
                 return;
@@ -571,7 +571,7 @@ void argparse_destory(struct argparse *ap)
         ptrvec_free(&ap->opts);
 
         if (ap->cmd_next)
-                argparse_destory(ap->cmd_next);
+                argparse_destroy(ap->cmd_next);
 
         if (ap->help)
                 free(ap->help);
@@ -666,7 +666,7 @@ int argparse_addn(struct argparse *ap,
         /* Initialize the user option pointer to NULL,
          * If the user provides this option in command line,
          * the pointer will be updated to point to the actual option object.
-         * WARNING: This pointer becomes invalid after argparse_destory(). */
+         * WARNING: This pointer becomes invalid after argparse_destroy(). */
         if (!result_slot)
                 result_slot = &op_hdr->_self_ptr;
         *result_slot = NULL;

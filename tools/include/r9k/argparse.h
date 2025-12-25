@@ -106,7 +106,7 @@ int _argparse_callback_version(struct argparse *ap, struct option *opt); // NOLI
 
 /* If a result doesn't equal to 0 that mean error. */
 struct argparse *argparse_create(const char *name, const char *version);
-void argparse_destory(struct argparse *ap);
+void argparse_destroy(struct argparse *ap);
 /* Register subcommand of argparse */
 int argparse_cmd(struct argparse *parent, const char *name, const char *desc, argparse_register_t reg, argparse_cmd_callback_t cb);
 
