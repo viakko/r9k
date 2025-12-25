@@ -527,7 +527,7 @@ int _argparse_callback_version(struct argparse *ap, struct option *opt)
         exit(0);
 }
 
-struct argparse *argparse_new(const char *name, const char *version)
+struct argparse *argparse_create(const char *name, const char *version)
 {
         struct argparse *ap;
 
@@ -550,17 +550,6 @@ struct argparse *argparse_new(const char *name, const char *version)
                 argparse_free(ap);
                 return NULL;
         }
-
-        return ap;
-}
-
-struct argparse *argparse_create(const char *name, const char *version)
-{
-        struct argparse *ap;
-
-        ap = argparse_new(name, version);
-        if (!ap)
-                return NULL;
 
         argparse_add0(ap, &ap->opt_h, "h", "help", "show this help message.", A_CALLBACK_HELP, 0);
         argparse_add0(ap, &ap->opt_v, "version", NULL, "show current version.", A_CALLBACK_VERSION, 0);

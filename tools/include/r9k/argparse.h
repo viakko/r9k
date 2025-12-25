@@ -105,8 +105,7 @@ int _argparse_callback_help(struct argparse *ap, struct option *opt); // NOLINT(
 int _argparse_callback_version(struct argparse *ap, struct option *opt); // NOLINT(*-reserved-identifier)
 
 /* If a result doesn't equal to 0 that mean error. */
-struct argparse *argparse_new(const char *name, const char *version); /* no builtin options. */
-struct argparse *argparse_create(const char *name, const char *version); /* builtin help and version options */
+struct argparse *argparse_create(const char *name, const char *version);
 /* Register subcommand of argparse */
 int argparse_cmd(struct argparse *parent, const char *name, const char *desc, argparse_register_t reg, argparse_cmd_callback_t cb);
 void argparse_free(struct argparse *ap);
