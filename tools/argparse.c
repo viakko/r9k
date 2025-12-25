@@ -825,7 +825,7 @@ static int _argparse_run(struct argparse *ap, int argc, char *argv[])
         /* if include cmd parsing for sub command. */
         if (cmd) {
                 if ((r = _argparse_run(cmd, (int) ptrvec_count(&arg_vec), (char **) arg_vec.items)) != 0) {
-                        memcpy(ap->error, cmd->error, sizeof(ap->error));
+                        snprintf(ap->error, sizeof(ap->error), "%s", cmd->error);
                         goto out;
                 }
 
