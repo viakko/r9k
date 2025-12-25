@@ -87,7 +87,7 @@ struct option_hdr
         argparse_callback_t _cb;
         uint32_t _maxval;
         uint32_t _flags;
-        uint32_t _mulid; /* mutual group id */
+        uint32_t _multual_id; /* mutual group id */
 };
 
 struct argparse
@@ -118,7 +118,7 @@ struct argparse
         struct option *opt_v;
 
         /* id */
-        uint32_t _mulid;
+        uint32_t _multual_id;
 };
 
 static struct argparse *find_subcmd(struct argparse *ap, const char *name)
@@ -195,7 +195,7 @@ static void error_rec(struct argparse *ap, const char *fmt, ...)
 
 static uint32_t getmulid(struct argparse *ap)
 {
-        return ap->_mulid++;
+        return ap->_multual_id++;
 }
 
 static int store_position_val(struct argparse *ap, char *val)
@@ -244,11 +244,11 @@ static int store_option_val(struct argparse *ap,
         return 0;
 }
 
-static struct option_hdr *is_mutual(struct argparse *ap, struct option_hdr *op_hdr)
+static struct option_hdr *_valid_mutual(struct argparse *ap, struct option_hdr *op_hdr)
 {
         struct option_hdr *ent;
 
-        if (op_hdr->_mulid == 0)
+        if (op_hdr->_multual_id == 0)
                 return NULL;
 
         for (uint32_t i = 0; i < ptrvec_count(&ap->opts); i++) {
@@ -256,7 +256,7 @@ static struct option_hdr *is_mutual(struct argparse *ap, struct option_hdr *op_h
                 if (ent == op_hdr)
                         continue;
 
-                if (*ent->_slot != NULL && ent->_mulid == op_hdr->_mulid)
+                if (*ent->_slot != NULL && ent->_multual_id == op_hdr->_multual_id)
                         return ent;
         }
 
@@ -270,19 +270,19 @@ static int try_take_val(struct argparse *ap,
                         struct option_hdr *op_hdr,
                         int is_long,
                         char *tok,
-                        char *eqval,
+                        char *external_val,
                         int *i,
                         char *argv[])
 {
         if (op_hdr->_slot) {
                 *op_hdr->_slot = &op_hdr->view;
 
-                struct option_hdr *ent = is_mutual(ap, op_hdr);
-                if (ent) {
+                struct option_hdr *multual_hdr = _valid_mutual(ap, op_hdr);
+                if (multual_hdr) {
                        error_rec(ap, "%s%s conflicts with option %s%s",
                                OPT_PREFIX(is_long), tok,
-                               ent->view.shortopt ? "-" : "--",
-                               ent->view.shortopt ? ent->view.shortopt : ent->view.longopt);
+                               multual_hdr->view.shortopt ? "-" : "--",
+                               multual_hdr->view.shortopt ? multual_hdr->view.shortopt : multual_hdr->view.longopt);
                         return A_ERROR_CONFLICT;
                 }
 
@@ -290,22 +290,20 @@ static int try_take_val(struct argparse *ap,
 
         if (op_hdr->_maxval == 0) {
                 if (op_hdr->_flags & O_REQUIRED) {
-                        error_rec(ap, "option %s%s flag need requires a value, but max capacity is zero",
-                               OPT_PREFIX(is_long), tok);
+                        error_rec(ap, "option %s%s flag required a value, but max capacity is zero", OPT_PREFIX(is_long), tok);
                         return A_ERROR_REQUIRED_VAL;
                 }
 
-                if (eqval) {
-                        error_rec(ap, "option %s%s does not accept arguments",
-                                   OPT_PREFIX(is_long), tok);
+                if (external_val) {
+                        error_rec(ap, "option %s%s does not consume value, cause max capacity is zero", OPT_PREFIX(is_long), tok);
                         return A_ERROR_NO_ARG_ACCEPT;
                 }
                 return 0;
         }
 
-        /* equal sign value */
-        if (eqval) {
-                store_option_val(ap, op_hdr, is_long, tok, eqval);
+        /* equal sign or concat value */
+        if (external_val) {
+                store_option_val(ap, op_hdr, is_long, tok, external_val);
                 return (int) op_hdr->view.nval;
         }
 
@@ -314,7 +312,7 @@ static int try_take_val(struct argparse *ap,
 
                 if (!val || val[0] == '-') {
                         if ((op_hdr->_flags & O_REQUIRED) && op_hdr->view.nval == 0) {
-                                error_rec(ap, "option %s%s missing required argument", OPT_PREFIX(is_long), tok);
+                                error_rec(ap, "option %s%s missing required values", OPT_PREFIX(is_long), tok);
                                 return A_ERROR_REQUIRED_VAL;
                         }
                         break;
@@ -536,7 +534,7 @@ struct argparse *argparse_create(const char *name, const char *version)
 
         ap->name = name;
         ap->version = version;
-        ap->_mulid = 1;
+        ap->_multual_id = 1;
 
         /* options */
         if (ptrvec_init(&ap->opts) != 0) {
@@ -725,12 +723,12 @@ void _argparse_mutual_exclude(struct argparse *ap, ...)
                 if (!op_hdr)
                         continue;
 
-                if (op_hdr->_mulid != 0)
+                if (op_hdr->_multual_id != 0)
                         WARNING("option %s%s already in other mutual exclude group!\n",
                                 op_hdr->view.shortopt ? "-" : "--",
                                 op_hdr->view.shortopt ? op_hdr->view.shortopt : op_hdr->view.longopt);
 
-                op_hdr->_mulid = mulid;
+                op_hdr->_multual_id = mulid;
         }
         va_end(va);
 }
