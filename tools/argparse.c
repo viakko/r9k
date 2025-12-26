@@ -9,6 +9,8 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include "r9k/string.h"
+
 #define INIT_VEC_CAP 8
 #define INIT_VAL_CAP 1
 #define INIT_ERR_CAP 512
@@ -797,6 +799,11 @@ static int _argparse_dispatch(struct argparse *ap,
                 }
 
                 tok++; /* skip '-' */
+
+                if (strlen(tok) == 0) {
+                        error_rec(ap, "empty short option name");
+                        return A_ERROR_INVALID_OPT;
+                }
 
                 if (cmd && find_hdr_option(cmd, tok)) {
                         if ((r = ptrvec_push_back(args_copy, argv[i])) != 0)

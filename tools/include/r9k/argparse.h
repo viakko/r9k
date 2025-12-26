@@ -78,6 +78,7 @@
 #define A_ERROR_NO_ARG_ACCEPT   (  -113) /* equal signs need value */
 #define A_ERROR_ALREADY_RUN     (  -114) /* double call argparse_run() */
 #define A_ERROR_INVALID_ARG     (  -115) /* invalid arguments */
+#define A_ERROR_INVALID_OPT     (  -116) /* invalid option */
 
 struct argparse;
 struct option;
