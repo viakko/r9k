@@ -9,8 +9,6 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "r9k/string.h"
-
 #define INIT_VEC_CAP 8
 #define INIT_VAL_CAP 1
 #define INIT_ERR_CAP 512
