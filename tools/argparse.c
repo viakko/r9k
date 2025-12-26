@@ -87,7 +87,7 @@ struct option_hdr
         argparse_callback_t _cb;
         uint32_t _maxval;
         uint32_t _flags;
-        uint32_t _multual_id; /* mutual group id */
+        uint32_t _mutual_id; /* mutual group id */
 };
 
 struct argparse
@@ -118,7 +118,7 @@ struct argparse
         struct option *opt_v;
 
         /* id */
-        uint32_t _multual_id;
+        uint32_t _mutual_id;
 };
 
 static struct argparse *find_subcmd(struct argparse *ap, const char *name)
@@ -195,7 +195,7 @@ static void error_rec(struct argparse *ap, const char *fmt, ...)
 
 static uint32_t getmulid(struct argparse *ap)
 {
-        return ap->_multual_id++;
+        return ap->_mutual_id++;
 }
 
 static int store_position_val(struct argparse *ap, char *val)
@@ -248,7 +248,7 @@ static struct option_hdr *_valid_mutual(struct argparse *ap, struct option_hdr *
 {
         struct option_hdr *ent;
 
-        if (op_hdr->_multual_id == 0)
+        if (op_hdr->_mutual_id == 0)
                 return NULL;
 
         for (uint32_t i = 0; i < ptrvec_count(&ap->opts); i++) {
@@ -256,7 +256,7 @@ static struct option_hdr *_valid_mutual(struct argparse *ap, struct option_hdr *
                 if (ent == op_hdr)
                         continue;
 
-                if (*ent->_slot != NULL && ent->_multual_id == op_hdr->_multual_id)
+                if (*ent->_slot != NULL && ent->_mutual_id == op_hdr->_mutual_id)
                         return ent;
         }
 
@@ -538,7 +538,7 @@ struct argparse *argparse_create(const char *name, const char *version)
 
         ap->name = name;
         ap->version = version;
-        ap->_multual_id = 1;
+        ap->_mutual_id = 1;
 
         /* options */
         if (ptrvec_init(&ap->opts) != 0) {
@@ -727,12 +727,12 @@ void _argparse_mutual_exclude(struct argparse *ap, ...)
                 if (!op_hdr)
                         continue;
 
-                if (op_hdr->_multual_id != 0)
+                if (op_hdr->_mutual_id != 0)
                         WARNING("option %s%s already in other mutual exclude group!\n",
                                 op_hdr->view.shortopt ? "-" : "--",
                                 op_hdr->view.shortopt ? op_hdr->view.shortopt : op_hdr->view.longopt);
 
-                op_hdr->_multual_id = mulid;
+                op_hdr->_mutual_id = mulid;
         }
         va_end(va);
 }
