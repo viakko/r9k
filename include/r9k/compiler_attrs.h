@@ -1,6 +1,6 @@
 /*
 -* SPDX-License-Identifier: MIT
- * Copyright (c) 2025 viakko
+ * Copyright (c) 2025 varketh
  */
 #ifndef COMPILER_ATTRUBUTES_H_
 #define COMPILER_ATTRUBUTES_H_

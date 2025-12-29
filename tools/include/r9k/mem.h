@@ -1,6 +1,6 @@
 /*
 -* SPDX-License-Identifier: MIT
- * Copyright (c) 2025 viakko
+ * Copyright (c) 2025 varketh
  */
 #ifndef MEM_H_
 #define MEM_H_

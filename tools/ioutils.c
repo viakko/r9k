@@ -1,6 +1,6 @@
 /*
 -* SPDX-License-Identifier: MIT
- * Copyright (c) 2025 viakko
+ * Copyright (c) 2025 varketh
  */
 #include <r9k/ioutils.h>
 //std

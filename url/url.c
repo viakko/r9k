@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (m) 2025 viakko
+ * Copyright (m) 2025 varketh
  *
  */
 #include <stdio.h>

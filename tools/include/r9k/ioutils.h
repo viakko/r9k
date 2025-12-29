@@ -1,6 +1,6 @@
 /*
 -* SPDX-License-Identifier: MIT
- * Copyright (c) 2025 viakko
+ * Copyright (c) 2025 varketh
  */
 #ifndef IO_UTILS_H_
 #define IO_UTILS_H_
