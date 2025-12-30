@@ -2,23 +2,57 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2025
  */
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <r9k/argparse.h>
 #include <r9k/panic.h>
-#include <sys/errno.h>
+#include <r9k/ioutils.h>
 
 #include "base64.h"
+
+static char *trim(char *str)
+{
+	if (!str)
+		return NULL;
+
+	char *start = str;
+
+	while (isspace((unsigned char)*start))
+		start++;
+
+	char *end = start;
+
+	while (*end != '\0')
+		end++;
+
+	while (end > start && isspace((unsigned char)*(end - 1)))
+		end--;
+
+	*end = '\0';
+
+	if (start != str) {
+		char *dest = str;
+		while (*start != '\0')
+			*dest++ = *start++;
+		*dest = '\0';
+	}
+
+	return str;
+}
 
 static int encode(struct argparse *ap, struct option *e)
 {
         __attr_ignore(e);
 
-        if (argparse_count(ap) <= 0)
-                PANIC("error: invalid arguments\n");
-
+	int is_free = 0;
         const char *plain = argparse_val(ap, 0);
+	if (!plain) {
+		plain = trim(readall(stdin));
+		is_free = 1;
+	}
+
         char *cipher = base64_encode((unsigned char *) plain, strlen(plain));
 	PANIC_IF(!cipher, "error: no memory\n");
 
@@ -35,6 +69,9 @@ static int encode(struct argparse *ap, struct option *e)
         printf("%s\n", cipher);
         free(cipher);
 
+	if (is_free)
+		free((void *) plain);
+
         return 0;
 }
 
@@ -42,10 +79,17 @@ static int decode(struct argparse *ap, struct option *e)
 {
 	__attr_ignore(e);
 
-	if (argparse_count(ap) <= 0)
-		PANIC("error: invalid arguments\n");
+	const char *origin = NULL;
+	const char *src;
 
-	const char *src = argparse_val(ap, 0);
+	if (argparse_count(ap) > 0) {
+		origin = argparse_val(ap, 0);
+		src = origin;
+	} else {
+		origin = readall(stdin);
+		src = trim((char *) origin);
+	}
+
 	size_t n = strlen(src);
 	char *cipher = malloc(n + 4);
 
@@ -60,7 +104,7 @@ static int decode(struct argparse *ap, struct option *e)
 
 		size_t pad = n & 3;
 		if (pad == 1)
-			PANIC("error: invalid url safe base64");
+			PANIC("error: invalid url safe base64\n");
 
 		if (pad == 2) {
 			cipher[n++] = '=';
@@ -79,6 +123,9 @@ static int decode(struct argparse *ap, struct option *e)
 
 	free(cipher);
 	free(plain);
+
+	if (!argparse_count(ap))
+		free((void *) origin);
 
 	return 0;
 }
